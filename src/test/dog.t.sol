@@ -2,24 +2,9 @@
 
 // dog.t.sol -- tests for dog.sol
 
-// Copyright (C) 2021-2022 Dai Foundation
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
-import { DSTest } from "ds-test/test.sol";
+import { DSTest } from "./test.sol";
 import { Vat } from "../vat.sol";
 import { Dog } from "../dog.sol";
 
@@ -39,7 +24,6 @@ contract ClipperMock {
 }
 
 contract DogTest is DSTest {
-
     bytes32 constant ilk = "gold";
     address constant usr = address(1337);
     uint256 constant THOUSAND = 1E3;
@@ -66,6 +50,8 @@ contract DogTest is DSTest {
         dog.file(ilk, "clip", address(clip));
         dog.file("Hole", 10 * THOUSAND * RAD);
         dog.file(ilk, "hole", 10 * THOUSAND * RAD);
+
+        failed = false;
     }
 
     function test_file_chop() public {

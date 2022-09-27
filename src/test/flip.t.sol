@@ -2,15 +2,11 @@
 
 pragma solidity >=0.5.12;
 
-import "ds-test/test.sol";
+import "./test.sol";
 
 import {Vat}     from "../vat.sol";
 import {Cat}     from "../cat.sol";
 import {Flipper} from "../flip.sol";
-
-interface Hevm {
-    function warp(uint256) external;
-}
 
 contract Guy {
     Flipper flip;
@@ -61,7 +57,6 @@ contract Guy {
     }
 }
 
-
 contract Gal {}
 
 contract Cat_ is Cat {
@@ -90,8 +85,6 @@ contract Vat_ is Vat {
 }
 
 contract FlipTest is DSTest {
-    Hevm hevm;
-
     Vat_    vat;
     Cat_    cat;
     Flipper flip;
@@ -106,9 +99,6 @@ contract FlipTest is DSTest {
     uint256 constant public MLN = 10 **  6;
 
     function setUp() public {
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(604411200);
-
         vat = new Vat_();
         cat = new Cat_(address(vat));
 
@@ -129,6 +119,8 @@ contract FlipTest is DSTest {
         vat.slip("gems", address(this), 1000 ether);
         vat.mint(ali, 200 ether);
         vat.mint(bob, 200 ether);
+
+        failed = false;
     }
     function rad(uint wad) internal pure returns (uint) {
         return wad * 10 ** 27;
@@ -145,48 +137,7 @@ contract FlipTest is DSTest {
         // can't tend on non-existent
         flip.tend(42, 0, 0);
     }
-    function test_tend() public {
-        uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , usr: usr
-                            , gal: gal
-                            , bid: 0
-                            });
 
-        Guy(ali).tend(id, 100 ether, 1 ether);
-        // bid taken from bidder
-        assertEq(vat.dai_balance(ali),   199 ether);
-        // gal receives payment
-        assertEq(vat.dai_balance(gal),     1 ether);
-
-        Guy(bob).tend(id, 100 ether, 2 ether);
-        // bid taken from bidder
-        assertEq(vat.dai_balance(bob), 198 ether);
-        // prev bidder refunded
-        assertEq(vat.dai_balance(ali), 200 ether);
-        // gal receives excess
-        assertEq(vat.dai_balance(gal),   2 ether);
-
-        hevm.warp(now + 5 hours);
-        Guy(bob).deal(id);
-        // bob gets the winnings
-        assertEq(vat.gem_balance(bob), 100 ether);
-    }
-    function test_tend_later() public {
-        uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , usr: usr
-                            , gal: gal
-                            , bid: 0
-                            });
-        hevm.warp(now + 5 hours);
-
-        Guy(ali).tend(id, 100 ether, 1 ether);
-        // bid taken from bidder
-        assertEq(vat.dai_balance(ali), 199 ether);
-        // gal receives payment
-        assertEq(vat.dai_balance(gal),   1 ether);
-    }
     function test_dent() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: 50 ether
@@ -239,67 +190,7 @@ contract FlipTest is DSTest {
         assertTrue(!Guy(ali).try_dent(id,  99 ether, 50 ether));
         assertTrue( Guy(ali).try_dent(id,  95 ether, 50 ether));
     }
-    function test_deal() public {
-        uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , usr: usr
-                            , gal: gal
-                            , bid: 0
-                            });
 
-        // only after ttl
-        Guy(ali).tend(id, 100 ether, 1 ether);
-        assertTrue(!Guy(bob).try_deal(id));
-        hevm.warp(now + 4.1 hours);
-        assertTrue( Guy(bob).try_deal(id));
-
-        uint ie = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , usr: usr
-                            , gal: gal
-                            , bid: 0
-                            });
-
-        // or after end
-        hevm.warp(now + 44 hours);
-        Guy(ali).tend(ie, 100 ether, 1 ether);
-        assertTrue(!Guy(bob).try_deal(ie));
-        hevm.warp(now + 1 days);
-        assertTrue( Guy(bob).try_deal(ie));
-    }
-    function test_tick() public {
-        // start an auction
-        uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , usr: usr
-                            , gal: gal
-                            , bid: 0
-                            });
-        // check no tick
-        assertTrue(!Guy(ali).try_tick(id));
-        // run past the end
-        hevm.warp(now + 2 weeks);
-        // check not biddable
-        assertTrue(!Guy(ali).try_tend(id, 100 ether, 1 ether));
-        assertTrue( Guy(ali).try_tick(id));
-        // check biddable
-        assertTrue( Guy(ali).try_tend(id, 100 ether, 1 ether));
-    }
-    function test_no_deal_after_end() public {
-        // if there are no bids and the auction ends, then it should not
-        // be refundable to the creator. Rather, it ticks indefinitely.
-        uint id = flip.kick({ lot: 100 ether
-                            , tab: 50 ether
-                            , usr: usr
-                            , gal: gal
-                            , bid: 0
-                            });
-        assertTrue(!Guy(ali).try_deal(id));
-        hevm.warp(now + 2 weeks);
-        assertTrue(!Guy(ali).try_deal(id));
-        assertTrue( Guy(ali).try_tick(id));
-        assertTrue(!Guy(ali).try_deal(id));
-    }
     function test_yank_tend() public {
         uint id = flip.kick({ lot: 100 ether
                             , tab: rad(50 ether)

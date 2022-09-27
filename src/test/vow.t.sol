@@ -1,32 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// vow.t.sol -- tests for vow.sol
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
-import "ds-test/test.sol";
+import "./test.sol";
 
 import {Flopper as Flop} from './flop.t.sol';
 import {Flapper as Flap} from './flap.t.sol';
 import {TestVat as  Vat} from './vat.t.sol';
 import {Vow}     from '../vow.sol';
-
-interface Hevm {
-    function warp(uint256) external;
-}
 
 contract Gem {
     mapping (address => uint256) public balanceOf;
@@ -36,8 +17,6 @@ contract Gem {
 }
 
 contract VowTest is DSTest {
-    Hevm hevm;
-
     Vat  vat;
     Vow  vow;
     Flop flop;
@@ -45,9 +24,6 @@ contract VowTest is DSTest {
     Gem  gov;
 
     function setUp() public {
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(604411200);
-
         vat = new Vat();
 
         gov  = new Gem();
@@ -64,6 +40,8 @@ contract VowTest is DSTest {
         vow.file("dump", 200 ether);
 
         vat.hope(address(flop));
+
+        failed = false;
     }
 
     function try_flog(uint era) internal returns (bool ok) {
@@ -141,19 +119,6 @@ contract VowTest is DSTest {
 
         assertEq(vat.can(address(vow), address(flap)), 0);
         assertEq(vat.can(address(vow), address(newFlap)), 1);
-    }
-
-    function test_flog_wait() public {
-        assertEq(vow.wait(), 0);
-        vow.file('wait', uint(100 seconds));
-        assertEq(vow.wait(), 100 seconds);
-
-        uint tic = now;                                                                                                                                                       
-        vow.fess(100 ether);                                                     
-        hevm.warp(tic + 99 seconds);                                             
-        assertTrue(!try_flog(tic) );                                             
-        hevm.warp(tic + 100 seconds);                                            
-        assertTrue( try_flog(tic) ); 
     }
 
     function test_no_reflop() public {

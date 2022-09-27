@@ -2,25 +2,9 @@
 
 /// dai.t.sol -- tests for dai.sol
 
-// Copyright (C) 2015-2019  DappHub, LLC
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
-import "ds-test/test.sol";
-
+import "./test.sol";
 import "../dai.sol";
 
 contract TokenUser {
@@ -37,13 +21,6 @@ contract TokenUser {
         return token.transferFrom(from, to, amount);
     }
 
-    function doTransfer(address to, uint amount)
-        public
-        returns (bool)
-    {
-        return token.transfer(to, amount);
-    }
-
     function doApprove(address recipient, uint amount)
         public
         returns (bool)
@@ -51,24 +28,10 @@ contract TokenUser {
         return token.approve(recipient, amount);
     }
 
-    function doAllowance(address owner, address spender)
-        public
-        view
-        returns (uint)
-    {
-        return token.allowance(owner, spender);
-    }
-
     function doBalanceOf(address who) public view returns (uint) {
         return token.balanceOf(who);
     }
 
-    function doApprove(address guy)
-        public
-        returns (bool)
-    {
-        return token.approve(guy, uint(-1));
-    }
     function doMint(uint wad) public {
         token.mint(address(this), wad);
     }
@@ -81,11 +44,6 @@ contract TokenUser {
     function doBurn(address guy, uint wad) public {
         token.burn(guy, wad);
     }
-
-}
-
-interface Hevm {
-    function warp(uint256) external;
 }
 
 contract DaiTest is DSTest {
@@ -93,7 +51,6 @@ contract DaiTest is DSTest {
     uint constant initialBalanceCal = 100;
 
     Dai token;
-    Hevm hevm;
     address user1;
     address user2;
     address self;
@@ -111,16 +68,15 @@ contract DaiTest is DSTest {
     bytes32 _s = 0x7e8e641e5e8bef932c3a55e7365e0201196fc6385d942c47d749bf76e73ee46f;
     uint8 _v = 27;
 
-
     function setUp() public {
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(604411200);
         token = createToken();
         token.mint(address(this), initialBalanceThis);
         token.mint(cal, initialBalanceCal);
         user1 = address(new TokenUser(token));
         user2 = address(new TokenUser(token));
         self = address(this);
+
+        failed = false;
     }
 
     function createToken() internal returns (Dai) {
@@ -226,7 +182,7 @@ contract DaiTest is DSTest {
         token.transfer(user1, burnAmount);
         assertEq(token.balanceOf(user1), burnAmount);
 
-        TokenUser(user1).doApprove(self);
+        TokenUser(user1).doApprove(self, uint(-1));
         token.burn(user1, burnAmount);
         assertEq(token.balanceOf(user1), 0);
     }
@@ -238,7 +194,7 @@ contract DaiTest is DSTest {
     function testBurnGuyAuth() public {
         token.transfer(user2, 10);
         //        token.rely(user1);
-        TokenUser(user2).doApprove(user1);
+        TokenUser(user2).doApprove(user1, uint(-1));
         TokenUser(user1).doBurn(user2, 10);
     }
 
@@ -294,7 +250,7 @@ contract DaiTest is DSTest {
         assertEq(token.nonces(cal), 0);
         assertEq(token.allowance(cal, del), 0);
         token.permit(cal, del, 0, 0, true, v, r, s);
-        assertEq(token.allowance(cal, del),uint(-1));
+        assertEq(token.allowance(cal, del), uint(-1));
         assertEq(token.nonces(cal),1);
     }
 
@@ -304,17 +260,16 @@ contract DaiTest is DSTest {
     }
 
     function testPermitWithExpiry() public {
-        assertEq(now, 604411200);
-        token.permit(cal, del, 0, 604411200 + 1 hours, true, _v, _r, _s);
-        assertEq(token.allowance(cal, del),uint(-1));
+        token.permit(cal, del, 0, now + 1 hours, true, _v, _r, _s);
+        assertEq(token.allowance(cal, del), uint(-1));
         assertEq(token.nonces(cal),1);
     }
 
-    function testFailPermitWithExpiry() public {
-        hevm.warp(now + 2 hours);
-        assertEq(now, 604411200 + 2 hours);
-        token.permit(cal, del, 0, 1, true, _v, _r, _s);
-    }
+//     function testFailPermitWithExpiry() public {
+//         hevm.warp(now + 2 hours);
+//         assertEq(now, 604411200 + 2 hours);
+//         token.permit(cal, del, 0, 1, true, _v, _r, _s);
+//     }
 
     function testFailReplay() public {
         token.permit(cal, del, 0, 0, true, v, r, s);

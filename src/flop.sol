@@ -2,26 +2,7 @@
 
 /// flop.sol -- Debt auction
 
-// Copyright (C) 2018 Rain <rainbreak@riseup.net>
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
-
-// FIXME: This contract was altered compared to the production version.
-// It doesn't use LibNote anymore.
-// New deployments of this contract will need to include custom events (TO DO).
 
 interface VatLike {
     function move(address,address,uint) external;
@@ -34,17 +15,6 @@ interface VowLike {
     function Ash() external returns (uint);
     function kiss(uint) external;
 }
-
-/*
-   This thing creates gems on demand in return for dai.
-
- - `lot` gems in return for bid
- - `bid` dai paid
- - `gal` receives dai income
- - `ttl` single bid lifetime
- - `beg` minimum bid increase
- - `end` max auction duration
-*/
 
 contract Flopper {
     // --- Auth ---

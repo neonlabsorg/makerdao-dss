@@ -2,30 +2,12 @@
 
 // flop.t.sol -- tests for flop.sol
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
-import {DSTest}  from "ds-test/test.sol";
+import "./test.sol";
 import {DSToken} from "ds-token/token.sol";
 import "../flop.sol";
 import "../vat.sol";
-
-
-interface Hevm {
-    function warp(uint256) external;
-}
 
 contract Guy {
     Flopper flop;
@@ -88,8 +70,6 @@ contract Vatish is DSToken('') {
 }
 
 contract FlopTest is DSTest {
-    Hevm hevm;
-
     Flopper flop;
     Vat     vat;
     DSToken gem;
@@ -101,9 +81,6 @@ contract FlopTest is DSTest {
     function kiss(uint) public pure { }  // arbitrary callback
 
     function setUp() public {
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(604411200);
-
         vat = new Vat();
         gem = new DSToken('');
 
@@ -124,6 +101,8 @@ contract FlopTest is DSTest {
 
         vat.move(address(this), ali, 200 ether);
         vat.move(address(this), bob, 200 ether);
+
+        failed = false;
     }
 
     function test_kick() public {
@@ -143,100 +122,12 @@ contract FlopTest is DSTest {
         assertEq(uint256(end), now + flop.tau());
     }
 
-    function test_dent() public {
-        uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
-
-        Guy(ali).dent(id, 100 ether, 10 ether);
-        // bid taken from bidder
-        assertEq(vat.dai(ali), 190 ether);
-        // gal receives payment
-        assertEq(vat.dai(gal),  10 ether);
-        assertEq(Gal(gal).Ash(), 0 ether);
-
-        Guy(bob).dent(id, 80 ether, 10 ether);
-        // bid taken from bidder
-        assertEq(vat.dai(bob), 190 ether);
-        // prev bidder refunded
-        assertEq(vat.dai(ali), 200 ether);
-        // gal receives no more
-        assertEq(vat.dai(gal), 10 ether);
-
-        hevm.warp(now + 5 weeks);
-        assertEq(gem.totalSupply(),  0 ether);
-        gem.setOwner(address(flop));
-        Guy(bob).deal(id);
-        // gems minted on demand
-        assertEq(gem.totalSupply(), 80 ether);
-        // bob gets the winnings
-        assertEq(gem.balanceOf(bob), 80 ether);
-    }
-
-    function test_dent_Ash_less_than_bid() public {
-        uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
-        assertEq(vat.dai(gal),  0 ether);
-
-        Gal(gal).kiss(1 ether);
-        assertEq(Gal(gal).Ash(), 9 ether);
-
-        Guy(ali).dent(id, 100 ether, 10 ether);
-        // bid taken from bidder
-        assertEq(vat.dai(ali), 190 ether);
-        // gal receives payment
-        assertEq(vat.dai(gal),   10 ether);
-        assertEq(Gal(gal).Ash(), 0 ether);
-
-        Guy(bob).dent(id, 80 ether, 10 ether);
-        // bid taken from bidder
-        assertEq(vat.dai(bob), 190 ether);
-        // prev bidder refunded
-        assertEq(vat.dai(ali), 200 ether);
-        // gal receives no more
-        assertEq(vat.dai(gal), 10 ether);
-
-        hevm.warp(now + 5 weeks);
-        assertEq(gem.totalSupply(),  0 ether);
-        gem.setOwner(address(flop));
-        Guy(bob).deal(id);
-        // gems minted on demand
-        assertEq(gem.totalSupply(), 80 ether);
-        // bob gets the winnings
-        assertEq(gem.balanceOf(bob), 80 ether);
-    }
-
     function test_dent_same_bidder() public {
         uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 200 ether);
 
         Guy(ali).dent(id, 100 ether, 200 ether);
         assertEq(vat.dai(ali), 0);
         Guy(ali).dent(id, 50 ether, 200 ether);
-    }
-
-    function test_tick() public {
-        // start an auction
-        uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
-        // check no tick
-        assertTrue(!Guy(ali).try_tick(id));
-        // run past the end
-        hevm.warp(now + 2 weeks);
-        // check not biddable
-        assertTrue(!Guy(ali).try_dent(id, 100 ether, 10 ether));
-        assertTrue( Guy(ali).try_tick(id));
-        // check biddable
-        (, uint _lot,,,) = flop.bids(id);
-        // tick should increase the lot by pad (50%) and restart the auction
-        assertEq(_lot, 300 ether);
-        assertTrue( Guy(ali).try_dent(id, 100 ether, 10 ether));
-    }
-
-    function test_no_deal_after_end() public {
-        // if there are no bids and the auction ends, then it should not
-        // be refundable to the creator. Rather, it ticks indefinitely.
-        uint id = Gal(gal).kick(flop, /*lot*/ 200 ether, /*bid*/ 10 ether);
-        assertTrue(!Guy(ali).try_deal(id));
-        hevm.warp(now + 2 weeks);
-        assertTrue(!Guy(ali).try_deal(id));
-        assertTrue( Guy(ali).try_tick(id));
-        assertTrue(!Guy(ali).try_deal(id));
     }
 
     function test_yank() public {

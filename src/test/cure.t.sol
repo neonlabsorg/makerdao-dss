@@ -2,13 +2,8 @@
 
 pragma solidity >=0.6.12;
 
-import { DSTest } from "ds-test/test.sol";
+import { DSTest } from "./test.sol";
 import { Cure } from "../cure.sol";
-
-interface Hevm {
-    function warp(uint256) external;
-    function store(address,bytes32,bytes32) external;
-}
 
 contract SourceMock {
     uint256 public cure;
@@ -23,15 +18,12 @@ contract SourceMock {
 }
 
 contract CureTest is DSTest {
-    Hevm hevm;
     Cure cure;
 
-    bytes20 constant CHEAT_CODE =
-        bytes20(uint160(uint256(keccak256('hevm cheat code'))));
-
     function setUp() public {
-        hevm = Hevm(address(CHEAT_CODE));
         cure = new Cure();
+
+        failed = false;
     }
 
     function testRelyDeny() public {
@@ -211,42 +203,6 @@ contract CureTest is DSTest {
         assertEq(cure.lCount(), 3);
         assertEq(cure.say(), 95_000);
         assertEq(cure.tell(), 95_000);
-    }
-
-    function testCureWaitPassed() public {
-        address source1 = address(new SourceMock(15_000));
-        address source2 = address(new SourceMock(30_000));
-        address source3 = address(new SourceMock(50_000));
-        cure.lift(source1);
-        cure.lift(source2);
-        cure.lift(source3);
-
-        cure.file("wait", 10);
-
-        cure.cage();
-
-        cure.load(source1);
-        cure.load(source2);
-        hevm.warp(block.timestamp + 10);
-        assertEq(cure.tell(), 45_000);
-    }
-
-    function testFailWait() public {
-        address source1 = address(new SourceMock(15_000));
-        address source2 = address(new SourceMock(30_000));
-        address source3 = address(new SourceMock(50_000));
-        cure.lift(source1);
-        cure.lift(source2);
-        cure.lift(source3);
-
-        cure.file("wait", 10);
-
-        cure.cage();
-
-        cure.load(source1);
-        cure.load(source2);
-        hevm.warp(block.timestamp + 9);
-        cure.tell();
     }
 
     function testLoadMultipleTimes() public {

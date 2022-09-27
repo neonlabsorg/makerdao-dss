@@ -2,32 +2,12 @@
 
 // flap.t.sol -- tests for flap.sol
 
-// Copyright (C) 2022 Dai Foundation
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
-import "ds-test/test.sol";
+import "./test.sol";
 import {DSToken} from "ds-token/token.sol";
 import "../flap.sol";
 import "../vat.sol";
-
-
-interface Hevm {
-    function warp(uint256) external;
-}
 
 contract Guy {
     Flapper flap;
@@ -63,8 +43,6 @@ contract Guy {
 }
 
 contract FlapTest is DSTest {
-    Hevm hevm;
-
     Flapper flap;
     Vat     vat;
     DSToken gem;
@@ -73,9 +51,6 @@ contract FlapTest is DSTest {
     address bob;
 
     function setUp() public {
-        hevm = Hevm(0x7109709ECfa91a80626fF3989D68f67F5b1DD12D);
-        hevm.warp(604411200);
-
         vat = new Vat();
         gem = new DSToken('');
 
@@ -95,6 +70,8 @@ contract FlapTest is DSTest {
 
         gem.push(ali, 200 ether);
         gem.push(bob, 200 ether);
+
+        failed = false;
     }
     function test_kick() public {
         assertEq(vat.dai(address(this)), 1000 ether);
@@ -107,35 +84,7 @@ contract FlapTest is DSTest {
         assertEq(vat.dai(address(flap)),  100 ether);
         assertEq(flap.fill(),             100 ether);
     }
-    function test_tend() public {
-        uint id = flap.kick({ lot: 100 ether
-                            , bid: 0
-                            });
-        // lot taken from creator
-        assertEq(vat.dai(address(this)), 900 ether);
 
-        Guy(ali).tend(id, 100 ether, 1 ether);
-        // bid taken from bidder
-        assertEq(gem.balanceOf(ali), 199 ether);
-        // payment remains in auction
-        assertEq(gem.balanceOf(address(flap)),  1 ether);
-
-        Guy(bob).tend(id, 100 ether, 2 ether);
-        // bid taken from bidder
-        assertEq(gem.balanceOf(bob), 198 ether);
-        // prev bidder refunded
-        assertEq(gem.balanceOf(ali), 200 ether);
-        // excess remains in auction
-        assertEq(gem.balanceOf(address(flap)),   2 ether);
-
-        hevm.warp(now + 5 weeks);
-        Guy(bob).deal(id);
-        // high bidder gets the lot
-        assertEq(vat.dai(address(flap)),  0 ether);
-        assertEq(vat.dai(bob), 100 ether);
-        // income is burned
-        assertEq(gem.balanceOf(address(flap)),   0 ether);
-    }
     function test_tend_same_bidder() public {
         uint id = flap.kick({ lot: 100 ether
                             , bid: 0
@@ -155,21 +104,7 @@ contract FlapTest is DSTest {
         assertTrue(!Guy(ali).try_tend(id, 100 ether, 1.01 ether));
         assertTrue( Guy(bob).try_tend(id, 100 ether, 1.07 ether));
     }
-    function test_tick() public {
-        // start an auction
-        uint id = flap.kick({ lot: 100 ether
-                            , bid: 0
-                            });
-        // check no tick
-        assertTrue(!Guy(ali).try_tick(id));
-        // run past the end
-        hevm.warp(now + 2 weeks);
-        // check not biddable
-        assertTrue(!Guy(ali).try_tend(id, 100 ether, 1 ether));
-        assertTrue( Guy(ali).try_tick(id));
-        // check biddable
-        assertTrue( Guy(ali).try_tend(id, 100 ether, 1 ether));
-    }
+
     function testFail_kick_over_lid() public {
         flap.kick({ lot: 501 ether
                   , bid: 0
@@ -185,66 +120,4 @@ contract FlapTest is DSTest {
                   , bid: 0
                   });
     }
-    function test_deal() public {
-        uint256 id = flap.kick({ lot: 400 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 400 ether);
-        Guy(ali).tend(id, 400 ether, 1 ether);
-        assertEq(flap.fill(), 400 ether);
-        hevm.warp(block.timestamp + 30 days);
-        flap.deal(id);
-        assertEq(flap.fill(), 0);
-        flap.kick({ lot: 400 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 400 ether);
-    }
-    function test_multiple_auctions() public {
-        uint256 id1 = flap.kick({ lot: 200 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 200 ether);
-        uint256 id2 = flap.kick({ lot: 200 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 400 ether);
-        Guy(ali).tend(id1, 200 ether, 1 ether);
-        assertEq(flap.fill(), 400 ether);
-        hevm.warp(block.timestamp + 30 days);
-        flap.deal(id1);
-        assertEq(flap.fill(), 200 ether);
-        flap.kick({ lot: 300 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 500 ether);
-        flap.tick(id2);
-        Guy(ali).tend(id2, 200 ether, 1 ether);
-        assertEq(flap.fill(), 500 ether);
-        hevm.warp(block.timestamp + 30 days);
-        flap.deal(id2);
-        assertEq(flap.fill(), 300 ether);
-    }
-    function test_mod_lid_in_flight() public {
-        uint256 id = flap.kick({ lot: 400 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 400 ether);
-        assertEq(flap.lid(), 500 ether);
-
-        // Reduce lid while auction is active
-        flap.file("lid", 300 ether);
-
-        Guy(ali).tend(id, 400 ether, 1 ether);
-        assertEq(flap.fill(), 400 ether);
-        assertEq(flap.lid(), 300 ether);
-        hevm.warp(block.timestamp + 30 days);
-        flap.deal(id);
-        assertEq(flap.fill(), 0);
-        flap.kick({ lot: 300 ether
-                  , bid: 0
-                  });
-        assertEq(flap.fill(), 300 ether);
-    }
-
 }

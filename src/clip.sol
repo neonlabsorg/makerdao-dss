@@ -2,21 +2,6 @@
 
 /// clip.sol -- Dai auction module 2.0
 
-// Copyright (C) 2020-2022 Dai Foundation
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published
-// by the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
 interface VatLike {
@@ -204,12 +189,6 @@ contract Clipper {
         z = mul(x, RAY) / y;
     }
 
-    // --- Auction ---
-
-    // get the price directly from the OSM
-    // Could get this from rmul(Vat.ilks(ilk).spot, Spotter.mat()) instead, but
-    // if mat has changed since the last poke, the resulting value will be
-    // incorrect.
     function getFeedPrice() internal returns (uint256 feedPrice) {
         (PipLike pip, ) = spotter.ilks(ilk);
         (bytes32 val, bool has) = pip.peek();
@@ -217,15 +196,6 @@ contract Clipper {
         feedPrice = rdiv(mul(uint256(val), BLN), spotter.par());
     }
 
-    // start an auction
-    // note: trusts the caller to transfer collateral to the contract
-    // The starting price `top` is obtained as follows:
-    //
-    //     top = val * buf / par
-    //
-    // Where `val` is the collateral's unitary value in USD, `buf` is a
-    // multiplicative factor to increase the starting price, and `par` is a
-    // reference per DAI.
     function kick(
         uint256 tab,  // Debt                   [rad]
         uint256 lot,  // Collateral             [wad]
@@ -307,23 +277,6 @@ contract Clipper {
         emit Redo(id, top, tab, lot, usr, kpr, coin);
     }
 
-    // Buy up to `amt` of collateral from the auction indexed by `id`.
-    // 
-    // Auctions will not collect more DAI than their assigned DAI target,`tab`;
-    // thus, if `amt` would cost more DAI than `tab` at the current price, the
-    // amount of collateral purchased will instead be just enough to collect `tab` DAI.
-    //
-    // To avoid partial purchases resulting in very small leftover auctions that will
-    // never be cleared, any partial purchase must leave at least `Clipper.chost`
-    // remaining DAI target. `chost` is an asynchronously updated value equal to
-    // (Vat.dust * Dog.chop(ilk) / WAD) where the values are understood to be determined
-    // by whatever they were when Clipper.upchost() was last called. Purchase amounts
-    // will be minimally decreased when necessary to respect this limit; i.e., if the
-    // specified `amt` would leave `tab < chost` but `tab > 0`, the amount actually
-    // purchased will be such that `tab == chost`.
-    //
-    // If `tab <= chost`, partial purchases are no longer possible; that is, the remaining
-    // collateral can only be purchased entirely, or not at all.
     function take(
         uint256 id,           // Auction id
         uint256 amt,          // Upper limit on amount of collateral to buy  [wad]

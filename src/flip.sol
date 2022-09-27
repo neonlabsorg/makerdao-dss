@@ -2,26 +2,7 @@
 
 /// flip.sol -- Collateral auction
 
-// Copyright (C) 2018 Rain <rainbreak@riseup.net>
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity >=0.5.12;
-
-// FIXME: This contract was altered compared to the production version.
-// It doesn't use LibNote anymore.
-// New deployments of this contract will need to include custom events (TO DO).
 
 interface VatLike {
     function move(address,address,uint256) external;
@@ -31,20 +12,6 @@ interface VatLike {
 interface CatLike {
     function claw(uint256) external;
 }
-
-/*
-   This thing lets you flip some gems for a given amount of dai.
-   Once the given amount of dai is raised, gems are forgone instead.
-
- - `lot` gems in return for bid
- - `tab` total dai wanted
- - `bid` dai paid
- - `gal` receives dai income
- - `usr` receives gem forgone
- - `ttl` single bid lifetime
- - `beg` minimum bid increase
- - `end` max auction duration
-*/
 
 contract Flipper {
     // --- Auth ---

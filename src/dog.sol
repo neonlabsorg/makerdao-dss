@@ -2,21 +2,6 @@
 
 /// dog.sol -- Dai liquidation module 2.0
 
-// Copyright (C) 2020-2022 Dai Foundation
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-//
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 pragma solidity ^0.6.12;
 
 interface ClipperLike {
@@ -153,20 +138,6 @@ contract Dog {
         return ilks[ilk].chop;
     }
 
-    // --- CDP Liquidation: all bark and no bite ---
-    //
-    // Liquidate a Vault and start a Dutch auction to sell its collateral for DAI.
-    //
-    // The third argument is the address that will receive the liquidation reward, if any.
-    //
-    // The entire Vault will be liquidated except when the target amount of DAI to be raised in
-    // the resulting auction (debt of Vault + liquidation penalty) causes either Dirt to exceed
-    // Hole or ilk.dirt to exceed ilk.hole by an economically significant amount. In that
-    // case, a partial liquidation is performed to respect the global and per-ilk limits on
-    // outstanding DAI target. The one exception is if the resulting auction would likely
-    // have too little collateral to be interesting to Keepers (debt taken from Vault < ilk.dust),
-    // in which case the function reverts. Please refer to the code and comments within if
-    // more detail is desired.
     function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id) {
         require(live == 1, "Dog/not-live");
 
@@ -180,9 +151,6 @@ contract Dog {
             (,rate, spot,, dust) = vat.ilks(ilk);
             require(spot > 0 && mul(ink, spot) < mul(art, rate), "Dog/not-unsafe");
 
-            // Get the minimum value between:
-            // 1) Remaining space in the general Hole
-            // 2) Remaining space in the collateral hole
             require(Hole > Dirt && milk.hole > milk.dirt, "Dog/liquidation-limit-hit");
             uint256 room = min(Hole - Dirt, milk.hole - milk.dirt);
 
@@ -193,11 +161,6 @@ contract Dog {
             if (art > dart) {
                 if (mul(art - dart, rate) < dust) {
 
-                    // If the leftover Vault would be dusty, just liquidate it entirely.
-                    // This will result in at least one of dirt_i > hole_i or Dirt > Hole becoming true.
-                    // The amount of excess will be bounded above by ceiling(dust_i * chop_i / WAD).
-                    // This deviation is assumed to be small compared to both hole_i and Hole, so that
-                    // the extra amount of target DAI over the limits intended is not of economic concern.
                     dart = art;
                 } else {
 
