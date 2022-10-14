@@ -104,7 +104,7 @@ contract Vow {
         Sin = sub(Sin, sin[era]);
         sin[era] = 0;
     }
-
+    
     // Debt settlement
     function heal(uint rad) external {
         require(rad <= vat.dai(address(this)), "Vow/insufficient-surplus");

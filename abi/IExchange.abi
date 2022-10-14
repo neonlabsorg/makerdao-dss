@@ -1,0 +1,1 @@
+[{"inputs":[{"internalType":"uint256","name":"goldAmt","type":"uint256"}],"name":"sellGold","outputs":[],"stateMutability":"nonpayable","type":"function"}]

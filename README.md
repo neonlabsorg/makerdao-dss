@@ -6,6 +6,22 @@ Collateral Dai. This is a high level description of the system, assuming
 familiarity with the basic economic mechanics as described in the
 whitepaper.
 
+## Tests
+
+Run tests in Neon devnet network:
+   . start.sh
+
+Run tests in Neon devnet network by docker:
+   Build the image:
+      sudo docker build -t maker-dss .
+   Run container:
+      sudo docker run -it --net=host maker-dss
+
+## Deploy
+
+Deploy contracts in Neon network:
+    . deploy.sh
+ 
 ## Additional Documentation
 
 `dss` is also documented in the [wiki](https://github.com/makerdao/dss/wiki) and in [DEVELOPING.md](https://github.com/makerdao/dss/blob/master/DEVELOPING.md)

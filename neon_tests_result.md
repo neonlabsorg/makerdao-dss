@@ -1,211 +1,141 @@
-Running 1 tests for src/test/abaci.t.sol:ClipperTest
-[PASS] test_continuous_exp_decrease() (gas: 499696)
+PASS DaiTest::testAllowanceStartsAtZero
+PASS DaiTest::testApproveSetsAllowance
+PASS DaiTest::testApproveWillModifyAllowance
+PASS DaiTest::testApproveWillNotModifyAllowance
+PASS DaiTest::testBurn
+PASS DaiTest::testBurnAuth
+PASS DaiTest::testBurnGuyAuth
+PASS DaiTest::testBurnGuyWithTrust
+PASS DaiTest::testBurnself
+PASS DaiTest::testChargesAmountApproved
+PASS DaiTest::testSelfFailUntrustedTransferFrom
+PASS DaiTest::testMintGuy
+PASS DaiTest::testMintGuyAuth
+PASS DaiTest::testMintself
+PASS DaiTest::testPermit
+PASS DaiTest::testPermitWithExpiry
+PASS DaiTest::testSelfFailChargeMoreThanApproved
+PASS DaiTest::testSelfFailInsufficientFundsTransfers
+PASS DaiTest::testSelfFailMintGuyNoAuth
+PASS DaiTest::testSelfFailPermitAddress0
+PASS DaiTest::testSelfFailReplay
+PASS DaiTest::testSelfFailTransferFromSelfNonArbitrarySize
+PASS DaiTest::testSelfFailTransferWithoutApproval
+PASS DaiTest::testSelfFailWrongAccountTransfers
+PASS DaiTest::testSetupPrecondition
+PASS DaiTest::testTransferCost
+PASS DaiTest::testTransferFromSelf
+PASS DaiTest::testTrustedTransferFrom
+PASS DaiTest::testTrusting
+PASS DaiTest::testTypehash
+PASS DaiTest::testValidTransfers
 
-Running 43 tests for src/test/clip.t.sol:ClipperTest
-[PASS] test_bark_only_leaving_dust_over_hole_rate() (gas: 395131)
-[PASS] testFail_reentrancy_file_addr() (gas: 1569597)
-[PASS] test_take_bid_fails_no_partial_allowed() (gas: 1192732)
-[PASS] testFail_stopped_3_take() (gas: 1120249)
-[PASS] test_redo_zero_usr() (gas: 29086)
-[PASS] test_stopped_2_take() (gas: 1185269)
-[PASS] test_gas_bark_kick() (gas: 350541)
-[PASS] test_kick_zero_usr() (gas: 25046)
-[PASS] test_kick_zero_tab() (gas: 25007)
-[PASS] test_incentive_max_values() (gas: 121034)
-[PASS] testFail_reentrancy_kick() (gas: 1578239)
-[PASS] test_partial_liquidation_Hole_limit() (gas: 359551)
-[PASS] testFail_kick_zero_price() (gas: 313782)
-[PASS] test_take_over_tab() (gas: 1151997)
-[PASS] test_Clipper_yank() (gas: 1099002)
-[PASS] test_gas_full_take() (gas: 1151261)
-[PASS] test_kick_zero_lot() (gas: 24941)
-[PASS] test_partial_liquidation_hole_limit() (gas: 360076)
-[PASS] test_bark_not_leaving_dust() (gas: 360633)
-[PASS] testFail_reentrancy_file_uint() (gas: 1565160)
-[PASS] test_take_zero_usr() (gas: 1090347)
-[PASS] test_Hole_hole() (gas: 4717009)
-[PASS] test_take_at_tab() (gas: 1151926)
-[PASS] testFail_take_impersonation() (gas: 1418312)
-[PASS] test_gas_partial_take() (gas: 1147506)
-[PASS] test_flashsale() (gas: 1342042)
-[PASS] test_change_dog() (gas: 27545)
-[PASS] test_stopped_1_take() (gas: 1185246)
-[PASS] testFail_take_bid_too_low() (gas: 1080163)
-[PASS] test_setBreaker() (gas: 118001)
-[PASS] test_bark_not_leaving_dust_over_hole() (gas: 360572)
-[PASS] test_take_under_tab() (gas: 1148329)
-[PASS] test_remove_id() (gas: 3458158)
-[PASS] test_take_bid_recalculates_due_to_chost_check() (gas: 1149717)
-[PASS] testFail_reentrancy_redo() (gas: 1538571)
-[PASS] testFail_reentrancy_yank() (gas: 1557138)
-[PASS] testFail_id_out_of_range() (gas: 277076930250344)
-[PASS] test_kick_basic() (gas: 192840)
-[PASS] test_bark_not_leaving_dust_rate() (gas: 393029)
-[PASS] test_stopped_kick() (gas: 961335)
-[PASS] testFail_not_enough_dai() (gas: 1112884)
-[PASS] testFail_reentrancy_take() (gas: 1551921)
-[PASS] test_get_chop() (gas: 5066)
+PASS FlapTest::testSelfFail_kick_over_lid
+PASS FlapTest::testSelfFail_kick_over_lid_2_auctions
+PASS FlapTest::test_beg
+PASS FlapTest::test_kick
+PASS FlapTest::test_tend_same_bidder
 
-Running 20 tests for src/test/cure.t.sol:CureTest
-[PASS] testFailCagedRely() (gas: 7836)
-[PASS] testFailAddSourceAuth() (gas: 77753)
-[PASS] testRelyDeny() (gas: 30838)
-[PASS] testFailCagedDelSource() (gas: 150871)
-[PASS] testFailCagedAddSource() (gas: 81650)
-[PASS] testFailDeny() (gas: 3848)
-[PASS] testLoadMultipleTimes() (gas: 471297)
-[PASS] testFailLoadNotAdded() (gas: 103595)
-[PASS] testCure() (gas: 647790)
-[PASS] testFailDelSourceNonExisting() (gas: 220601)
-[PASS] testAddSourceDelSource() (gas: 674755)
-[PASS] testCage() (gas: 8630)
-[PASS] testFailCagedDeny() (gas: 7790)
-[PASS] testFailRely() (gas: 3981)
-[PASS] testFailDelSourceAuth() (gas: 146950)
-[PASS] testFailLoadNotCaged() (gas: 164320)
-[PASS] testFailFile() (gas: 3931)
-[PASS] testFile() (gas: 27031)
-[PASS] testLoadNoChange() (gas: 268466)
-[PASS] testCureAllLoaded() (gas: 693556)
+PASS ClipperAbaciTest::test_continuous_exp_decrease
 
-Running 33 tests for src/test/dai.t.sol:DaiTest
-[PASS] testApproveWillNotModifyAllowance() (gas: 60889)
-[PASS] testFailPermitAddress0() (gas: 2933)
-[PASS] testBurnAuth() (gas: 54475)
-[PASS] testTransferCost() (gas: 28147)
-[PASS] testMintGuy() (gas: 27412)
-[BAIL] testPermitWithExpiry()
-[PASS] testTypehash() (gas: 1240)
-[FAIL] testDaiAddress()
-[PASS] testAllowanceStartsAtZero() (gas: 5783)
-[PASS] testFailReplay() (gas: 6151)
-[PASS] testBurnGuyAuth() (gas: 57682)
-[PASS] testFailTransferFromSelfNonArbitrarySize() (gas: 3236)
-[PASS] testFailUntrustedTransferFrom() (gas: 8978)
-[PASS] testFailTransferWithoutApproval() (gas: 30646)
-[PASS] testFailWrongAccountTransfers() (gas: 3864)
-[PASS] testSetupPrecondition() (gas: 1685)
-[PASS] testBurnself() (gas: 5554)
-[PASS] testBurnGuyWithTrust() (gas: 59682)
-[PASS] testApproveSetsAllowance() (gas: 37281)
-[PASS] testFailMintGuyNoAuth() (gas: 4390)
-[FAIL] testDomain_Separator()
-[PASS] testTrusting() (gas: 33671)
-[PASS] testMintGuyAuth() (gas: 50195)
-[PASS] testTrustedTransferFrom() (gas: 54636)
-[PASS] testChargesAmountApproved() (gas: 57595)
-[PASS] testFailChargeMoreThanApproved() (gas: 54840)
-[PASS] testMintself() (gas: 5380)
-[PASS] testBurn() (gas: 5117)
-[PASS] testValidTransfers() (gas: 33291)
-[PASS] testFailInsufficientFundsTransfers() (gas: 27749)
-[BAIL] testPermit()
-[PASS] testTransferFromSelf() (gas: 28061)
-[PASS] testApproveWillModifyAllowance() (gas: 61931)
+PASS CureTest::testAddSourceDelSource
+PASS CureTest::testCage
+PASS CureTest::testCure
+PASS CureTest::testCureAllLoaded
+PASS CureTest::testFile
+PASS CureTest::testLoadMultipleTimes
+PASS CureTest::testLoadNoChange
+PASS CureTest::testRelyDeny
+PASS CureTest::testSelfFailAddSourceAuth
+PASS CureTest::testSelfFailCagedAddSource
+PASS CureTest::testSelfFailCagedDelSource
+PASS CureTest::testSelfFailCagedDeny
+PASS CureTest::testSelfFailCagedRely
+PASS CureTest::testSelfFailDelSourceAuth
+PASS CureTest::testSelfFailDelSourceNonExisting
+PASS CureTest::testSelfFailDeny
+PASS CureTest::testSelfFailFile
+PASS CureTest::testSelfFailLoadNotAdded
+PASS CureTest::testSelfFailLoadNotCaged
+PASS CureTest::testSelfFailRely
 
-Running 14 tests for src/test/dog.t.sol:DogTest
-[PASS] test_bark_dusty_vault_dusty_room() (gas: 449362)
-[PASS] testFail_file_clip_wrong_ilk() (gas: 2352)
-[PASS] test_bark_do_not_create_dusty_auction_Hole() (gas: 425050)
-[PASS] testFail_file_chop_lt_WAD() (gas: 1415)
-[PASS] test_bark_partial_liquidation_Dirt_does_not_exceed_Hole_if_remnant_is_nondusty() (gas: 326027)
-[PASS] test_bark_partial_liquidation_Dirt_exceeds_Hole_to_avoid_dusty_remnant() (gas: 325840)
-[PASS] test_bark_partial_liquidation_dirt_does_not_exceed_hole_if_remnant_is_nondusty() (gas: 326312)
-[PASS] test_bark_dusty_vault() (gas: 317714)
-[PASS] test_bark_basic() (gas: 314264)
-[PASS] testFail_file_chop_eq_zero() (gas: 1453)
-[PASS] test_bark_partial_liquidation_dirt_exceeds_hole_to_avoid_dusty_remnant() (gas: 326103)
-[PASS] test_bark_do_not_create_dusty_auction_hole() (gas: 426212)
-[PASS] testFail_bark_not_unsafe() (gas: 197803)
-[PASS] test_file_chop() (gas: 6588)
+PASS JugTest::test_drip_0d
+PASS JugTest::test_drip_file
+PASS JugTest::test_rpow
 
-Running 6 tests for src/test/end.t.sol:EndTest
-[PASS] test_cage_basic() (gas: 83235)
-[PASS] test_cage_snip() (gas: 11162032)
-[PASS] test_fuzz_fix_calcs_1_2(uint256,uint192) (runs: 100)
-[PASS] test_fuzz_fix_calcs_0_1(uint256,uint192) (runs: 100)
-[PASS] test_cage_pot_drip() (gas: 80008)
-[PASS] test_fuzz_fix_calcs_0_2(uint256,uint192) (runs: 100)
+PASS ForkTest::test_fork_dust
+PASS ForkTest::test_fork_to_other
+PASS ForkTest::test_fork_to_self
+PASS ForkTest::test_give_to_other
 
-Running 5 tests for src/test/flap.t.sol:FlapTest
-[PASS] testFail_kick_over_lid() (gas: 24003)
-[PASS] test_beg() (gas: 200778)
-[PASS] testFail_kick_over_lid_2_auctions() (gas: 119378)
-[PASS] test_kick() (gas: 124517)
-[PASS] test_tend_same_bidder() (gas: 186278)
+PASS FrobTest1::test_calm
+PASS FrobTest1::test_cool
+PASS FrobTest1::test_join
+PASS FrobTest1::test_lock
+PASS FrobTest1::test_safe
+PASS FrobTest1::test_setup
+PASS FrobTest2::test_dust
+PASS FrobTest2::test_nice
+PASS FrobTest3::test_hope
+PASS FrobTest4::test_alt_callers
 
-Running 7 tests for src/test/flip.t.sol:FlipTest
-[PASS] test_tend_dent_same_bidder() (gas: 262074)
-[PASS] test_beg() (gas: 310453)
-[PASS] testFail_tend_empty() (gas: 3513)
-[PASS] test_dent() (gas: 268006)
-[PASS] test_yank_dent() (gas: 270504)
-[PASS] test_kick() (gas: 163567)
-[PASS] test_yank_tend() (gas: 260947)
+PASS JoinTest::test_cage_no_access
+PASS JoinTest::test_dai_exit
+PASS JoinTest::test_dai_exit_join
+PASS JoinTest::test_gem_join
 
-Running 4 tests for src/test/flop.t.sol:FlopTest
-[PASS] test_yank_no_bids() (gas: 200679)
-[PASS] test_yank() (gas: 223955)
-[PASS] test_dent_same_bidder() (gas: 152622)
-[PASS] test_kick() (gas: 128351)
+PASS FoldTest::test_fold
 
-Running 4 tests for src/test/fork.t.sol:ForkTest
-[PASS] test_give_to_other() (gas: 257866)
-[PASS] test_fork_to_self() (gas: 191870)
-[PASS] test_fork_to_other() (gas: 310302)
-[PASS] test_fork_dust() (gas: 333325)
+PASS DogTest1::testSelfFail_bark_not_unsafe
+PASS DogTest1::testSelfFail_file_chop_eq_zero
+PASS DogTest1::testSelfFail_file_chop_lt_WAD
+PASS DogTest1::testSelfFail_file_clip_wrong_ilk
+PASS DogTest1::test_bark_basic
+PASS DogTest1::test_bark_dusty_vault
+PASS DogTest1::test_bark_dusty_vault_dusty_room
+PASS DogTest1::test_bark_partial_liquidation_Dirt_does_not_exceed_Hole_if_remnant_is_nondusty
+PASS DogTest1::test_bark_partial_liquidation_Dirt_exceeds_Hole_to_avoid_dusty_remnant
+PASS DogTest1::test_bark_partial_liquidation_dirt_does_not_exceed_hole_if_remnant_is_nondusty
+PASS DogTest1::test_bark_partial_liquidation_dirt_exceeds_hole_to_avoid_dusty_remnant
+PASS DogTest1::test_file_chop
+PASS DogTest2::test_bark_do_not_create_dusty_auction_Hole
+PASS DogTest2::test_bark_do_not_create_dusty_auction_hole
 
-Running 3 tests for src/test/jug.t.sol:JugTest
-[PASS] test_rpow() (gas: 959949)
-[PASS] test_drip_0d() (gas: 45066)
-[PASS] test_drip_file() (gas: 41947)
+PASS FlopTest1::test_dent_same_bidder
+PASS FlopTest1::test_kick
+PASS FlopTest2::test_yank
+PASS FlopTest3::test_yank_no_bids
 
-Running 1 tests for src/test/pot.t.sol:DSRTest
-[PASS] test_save_0d() (gas: 108546)
+PASS FlipTest1::testSelfFail_tend_empty
+PASS FlipTest1::test_dent
+PASS FlipTest1::test_kick
+PASS FlipTest2::test_beg
+PASS FlipTest3::test_yank_tend
+PASS FlipTest4::test_tend_dent_same_bidder
+PASS FlipTest4::test_yank_dent
 
-Running 12 tests for src/test/vat.t.sol:BiteTest
-[PASS] testFail_dusty_litterbox() (gas: 587976)
-[PASS] test_set_dunk_multiple_ilks() (gas: 54145)
-[PASS] testFail_fill_litterbox() (gas: 485551)
-[PASS] testFail_null_auctions_dink_artificial_values() (gas: 158050)
-[PASS] testFail_null_auctions_dart_artificial_values() (gas: 500128)
-[PASS] testFail_vault_is_safe() (gas: 168418)
-[PASS] testFail_null_spot_value() (gas: 483328)
-[PASS] test_bite_under_dunk() (gas: 469977)
-[PASS] test_cat_set_box() (gas: 3591)
-[PASS] test_bite_over_dunk() (gas: 469952)
-[PASS] testFail_null_auctions_dink_artificial_values_2() (gas: 162345)
-[PASS] testFail_null_auctions_dart_realistic_values() (gas: 66513)
+PASS VowTest1::test_flap
+PASS VowTest1::test_multiple_flop_dents
+PASS VowTest1::test_no_flap_nonzero_woe
+PASS VowTest1::test_no_flap_pending_flop
+PASS VowTest1::test_no_flap_pending_heal
+PASS VowTest1::test_no_flap_pending_sin
+PASS VowTest1::test_no_flop_pending_joy
+PASS VowTest1::test_no_reflop
+PASS VowTest1::test_no_surplus_after_good_flop
+PASS VowTest2::test_change_flap_flop
 
-Running 1 tests for src/test/vat.t.sol:FoldTest
-[PASS] test_fold() (gas: 205984)
+PASS BiteTest::testSelfFail_dusty_litterbox
+PASS BiteTest::testSelfFail_fill_litterbox
+PASS BiteTest::testSelfFail_null_auctions_dart_artificial_values
+PASS BiteTest::testSelfFail_null_auctions_dart_realistic_values
+PASS BiteTest::testSelfFail_null_auctions_dink_artificial_values
+PASS BiteTest::testSelfFail_null_auctions_dink_artificial_values_2
+PASS BiteTest::testSelfFail_null_spot_value
+PASS BiteTest::testSelfFail_vault_is_safe
+PASS BiteTest::test_bite_over_dunk
+PASS BiteTest::test_bite_under_dunk
+PASS BiteTest::test_cat_set_box
+PASS BiteTest::test_set_dunk_multiple_ilks
 
-Running 10 tests for src/test/vat.t.sol:FrobTest
-[PASS] test_cool() (gas: 137057)
-[PASS] test_join() (gas: 68833)
-[PASS] test_hope() (gas: 2761914)
-[PASS] test_setup() (gas: 2952)
-[PASS] test_nice() (gas: 194720)
-[PASS] test_alt_callers() (gas: 3049491)
-[PASS] test_lock() (gas: 61132)
-[PASS] test_calm() (gas: 131312)
-[PASS] test_safe() (gas: 129183)
-[PASS] test_dust() (gas: 181184)
-
-Running 4 tests for src/test/vat.t.sol:JoinTest
-[PASS] test_dai_exit_join() (gas: 181746)
-[PASS] test_cage_no_access() (gas: 8260)
-[PASS] test_gem_join() (gas: 134862)
-[PASS] test_dai_exit() (gas: 153255)
-
-Running 10 tests for src/test/vow.t.sol:VowTest
-[PASS] test_no_surplus_after_good_flop() (gas: 347003)
-[PASS] test_no_flap_nonzero_woe() (gas: 196053)
-[PASS] test_no_reflop() (gas: 408942)
-[PASS] test_no_flap_pending_flop() (gas: 311907)
-[PASS] test_change_flap_flop() (gas: 3811146)
-[PASS] test_no_flap_pending_heal() (gas: 347002)
-[PASS] test_multiple_flop_dents() (gas: 366276)
-[PASS] test_no_flop_pending_joy() (gas: 320462)
-[PASS] test_flap() (gas: 178211)
-[PASS] test_no_flap_pending_sin() (gas: 196051)
+PASS EndTest::test_cage_basic

@@ -34,14 +34,16 @@ contract CureTest is DSTest {
         assertEq(cure.wards(address(123)), 0);
     }
 
-    function testFailRely() public {
+    function testSelfFailRely() public {
         cure.deny(address(this));
         cure.rely(address(123));
+        fail();
     }
 
-    function testFailDeny() public {
+    function testSelfFailDeny() public {
         cure.deny(address(this));
         cure.deny(address(123));
+        fail();
     }
 
     function testFile() public {
@@ -50,9 +52,10 @@ contract CureTest is DSTest {
         assertEq(cure.wait(), 10);
     }
 
-    function testFailFile() public {
+    function testSelfFailFile() public {
         cure.deny(address(this));
         cure.file("wait", 10);
+        fail();
     }
 
     function testAddSourceDelSource() public {
@@ -131,24 +134,27 @@ contract CureTest is DSTest {
         assertEq(cure.pos(addr1), 3);
     }
 
-    function testFailAddSourceAuth() public {
+    function testSelfFailAddSourceAuth() public {
         cure.deny(address(this));
         address addr = address(new SourceMock(0));
         cure.lift(addr);
+        fail();
     }
 
-    function testFailDelSourceAuth() public {
+    function testSelfFailDelSourceAuth() public {
         address addr = address(new SourceMock(0));
         cure.lift(addr);
         cure.deny(address(this));
         cure.drop(addr);
+        fail();
     }
 
-    function testFailDelSourceNonExisting() public {
+    function testSelfFailDelSourceNonExisting() public {
         address addr1 = address(new SourceMock(0));
         cure.lift(addr1);
         address addr2 = address(new SourceMock(0));
         cure.drop(addr2);
+        fail();
     }
 
     function testCage() public {
@@ -247,41 +253,49 @@ contract CureTest is DSTest {
         assertEq(cure.tell(), 2_000);
     }
 
-    function testFailLoadNotCaged() public {
+    function testSelfFailLoadNotCaged() public {
         address source = address(new SourceMock(2_000));
         cure.lift(source);
 
         cure.load(source);
+
+        fail();
     }
 
-    function testFailLoadNotAdded() public {
+    function testSelfFailLoadNotAdded() public {
         address source = address(new SourceMock(2_000));
 
         cure.cage();
 
         cure.load(source);
+        
+        fail();
     }
 
-    function testFailCagedRely() public {
+    function testSelfFailCagedRely() public {
         cure.cage();
         cure.rely(address(123));
+        fail();
     }
 
-    function testFailCagedDeny() public {
+    function testSelfFailCagedDeny() public {
         cure.cage();
         cure.deny(address(123));
+        fail();
     }
 
-    function testFailCagedAddSource() public {
+    function testSelfFailCagedAddSource() public {
         cure.cage();
         address source = address(new SourceMock(0));
         cure.lift(source);
+        fail();
     }
 
-    function testFailCagedDelSource() public {
+    function testSelfFailCagedDelSource() public {
         address source = address(new SourceMock(0));
         cure.lift(source);
         cure.cage();
         cure.drop(source);
+        fail();
     }
 }

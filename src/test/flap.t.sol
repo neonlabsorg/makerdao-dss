@@ -5,7 +5,7 @@
 pragma solidity ^0.6.12;
 
 import "./test.sol";
-import {DSToken} from "ds-token/token.sol";
+import {DSToken} from "./token.sol";
 import "../flap.sol";
 import "../vat.sol";
 
@@ -105,12 +105,13 @@ contract FlapTest is DSTest {
         assertTrue( Guy(bob).try_tend(id, 100 ether, 1.07 ether));
     }
 
-    function testFail_kick_over_lid() public {
+    function testSelfFail_kick_over_lid() public {
         flap.kick({ lot: 501 ether
                   , bid: 0
                   });
+        fail();
     }
-    function testFail_kick_over_lid_2_auctions() public {
+    function testSelfFail_kick_over_lid_2_auctions() public {
         // Just up to the lid
         flap.kick({ lot: 500 ether
                   , bid: 0
@@ -119,5 +120,6 @@ contract FlapTest is DSTest {
         flap.kick({ lot: 1
                   , bid: 0
                   });
+        fail();
     }
 }

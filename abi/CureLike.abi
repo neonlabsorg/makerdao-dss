@@ -1,0 +1,1 @@
+[{"inputs":[],"name":"cage","outputs":[],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"tell","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]

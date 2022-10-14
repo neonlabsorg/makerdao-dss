@@ -1,0 +1,7 @@
+export DAPP_SOLC_VERSION=0.6.12
+export ETH_FROM=0xa3a0E8Fbe0Ad412D808693EDc2751f0776e13AF1
+export ETH_PASSWORD=eth_pass
+export ETH_KEYSTORE=keystore
+export ETH_RPC_URL=https://devnet.neonevm.org/solana
+export ETH_GAS=300000000
+export ETH_GAS_PRICE=200000000000

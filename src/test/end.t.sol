@@ -5,28 +5,130 @@
 pragma solidity ^0.6.12;
 
 import "./test.sol";
-import "ds-token/token.sol";
-import "ds-value/value.sol";
 
-import {Vat}  from '../vat.sol';
-import {Cat}  from '../cat.sol';
-import {Dog}  from '../dog.sol';
-import {Vow}  from '../vow.sol';
-import {Pot}  from '../pot.sol';
-import {Flipper} from '../flip.sol';
-import {Clipper} from '../clip.sol';
-import {Flapper} from '../flap.sol';
-import {Flopper} from '../flop.sol';
-import {GemJoin} from '../join.sol';
-import {End}  from '../end.sol';
-import {Spotter} from '../spot.sol';
-import {Cure} from '../cure.sol';
+interface IVat {
+    function frob(bytes32 i, address u, address v, address w, int dink, int dart) external;
+    function flux(bytes32 ilk, address src, address dst, uint256 wad) external;
+    function move(address src, address dst, uint256 rad) external;
+    function hope(address usr) external;
+    function dai(address u) external view returns (uint256); // [rad]
+    function gem(bytes32 ilk, address usr) external view returns (uint); // [wad]
+    function urns(bytes32 ilk, address usr) external view returns (uint256, uint256);
+    function ilks(bytes32 ilk) external view returns (uint256, uint256, uint256, uint256, uint256);
+    function init(bytes32 ilk) external;
+    function file(bytes32 what, uint data) external;
+    function file(bytes32 ilk, bytes32 what, uint data) external;
+    function rely(address usr) external;
+    function live() external returns (uint256); // Active Flag
+    function fold(bytes32 i, address u, int rate) external;
+    function sin(address u) external returns (uint256); // [rad]
+    function vice() external returns (uint256); // Total Unbacked Dai  [rad]
+    function debt() external returns (uint256); // Total Dai Issued    [rad]
+}
+
+interface IToken {
+    function setOwner(address owner_) external;
+    function mint(uint wad) external;
+    function mint(address guy, uint wad) external;
+    function approve(address guy) external returns (bool);
+    function approve(address guy, uint wad) external returns (bool);
+    function balanceOf(address user) external view returns (uint256);
+}
+
+interface IFlapper {
+    function rely(address usr) external;
+    function live() external returns (uint);
+}
+
+interface IFlopper {
+    function rely(address usr) external;
+    function live() external returns (uint);
+}
+
+interface IVow {
+    function rely(address usr) external;
+    function flopper() external returns (address);
+    function flapper() external returns (address);
+    function live() external returns (uint256); // Active Flag
+}
+
+interface IPot {
+    function file(bytes32 what, uint256 data) external;
+    function file(bytes32 what, address addr) external;
+    function rely(address guy) external;
+    function live() external returns (uint256); // Active Flag
+    function drip() external returns (uint);
+    function dsr() external returns (uint256); // The Dai Savings Rate          [ray]
+}
+
+interface ICat {
+    function file(bytes32 what, address data) external;
+    function file(bytes32 what, uint256 data) external;
+    function file(bytes32 ilk, bytes32 what, uint256 data) external;
+    function file(bytes32 ilk, bytes32 what, address flip) external;
+    function rely(address usr) external;
+    function live() external returns (uint256); // Active Flag
+}
+
+interface IDog {
+    function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id);
+    function file(bytes32 what, address data) external;
+    function file(bytes32 what, uint256 data) external;
+    function file(bytes32 ilk, bytes32 what, uint256 data) external;
+    function file(bytes32 ilk, bytes32 what, address clip) external;
+    function rely(address usr) external;
+    function Dirt() external returns (uint256);
+}
+
+interface ISpotter {
+    function file(bytes32 ilk, bytes32 what, address pip_) external;
+    function file(bytes32 what, uint data) external;
+    function file(bytes32 ilk, bytes32 what, uint data) external;
+    function poke(bytes32 ilk) external;
+    function rely(address guy) external;
+}
+
+interface ICure {
+    function rely(address usr) external;
+}
+
+interface IEnd {
+    function free(bytes32 ilk) external;
+    function pack(uint256 wad) external;
+    function cash(bytes32 ilk, uint256 wad) external;
+    function file(bytes32 what, address data) external;
+    function file(bytes32 what, uint256 data) external;
+    function live() external returns (uint256); // Active Flag
+    function cage() external;
+    function cage(bytes32 ilk) external;
+    function tag(bytes32 ilk) external returns (uint256); // Cage price              [ray]
+    function snip(bytes32 ilk, uint256 id) external;
+    function Art(bytes32 ilk) external returns (uint256); // Total debt per ilk      [wad]
+}
+
+interface IGemJoin {
+    function exit(address usr, uint wad) external;
+    function join(address usr, uint wad) external;
+}
+
+interface IValue {
+    function poke(bytes32 wut) external;
+}
+
+interface IFlipper {
+    function rely(address usr) external;
+}
+
+interface IClipper {
+    function rely(address usr) external;
+    function sales(uint256 id) external returns (uint256, uint256, uint256, address, uint96, uint256);
+}
 
 contract Usr {
-    Vat public vat;
-    End public end;
+    IVat public vat;
+    IEnd public end;
 
-    constructor(Vat vat_, End end_) public {
+    constructor(IVat vat_, IEnd end_) public {
         vat  = vat_;
         end  = end_;
     }
@@ -42,7 +144,7 @@ contract Usr {
     function hope(address usr) public {
         vat.hope(usr);
     }
-    function exit(GemJoin gemA, address usr, uint wad) public {
+    function exit(IGemJoin gemA, address usr, uint wad) public {
         gemA.exit(usr, wad);
     }
     function free(bytes32 ilk) public {
@@ -57,29 +159,37 @@ contract Usr {
 }
 
 contract EndTest is DSTest {
-    Vat   vat;
-    End   end;
-    Vow   vow;
-    Pot   pot;
-    Cat   cat;
-    Dog   dog;
+    IVat   vat;
+    IEnd   end;
+    IVow   vow;
+    IPot   pot;
+    ICat   cat;
+    IDog   dog;
 
-    Spotter spot;
+    ISpotter spot;
 
-    Cure cure;
-
+    ICure cure;
+    
+    IToken gov;
+    IToken coin;
+    
+    IGemJoin gemA;
+    IValue pip;
+    
     struct Ilk {
-        DSValue pip;
-        DSToken gem;
-        GemJoin gemA;
-        Flipper flip;
-        Clipper clip;
+        IValue pip;
+        IToken gem;
+        IGemJoin gemA;
+        IFlipper flip;
+        IClipper clip;
     }
 
     mapping (bytes32 => Ilk) ilks;
 
-    Flapper flap;
-    Flopper flop;
+    IFlapper flap;
+    IFlopper flop;
+    IFlipper flip;
+    IClipper clip;
 
     uint constant WAD = 10 ** 18;
     uint constant RAY = 10 ** 27;
@@ -128,10 +238,8 @@ contract EndTest is DSTest {
     }
 
     function init_collateral(bytes32 name) internal returns (Ilk memory) {
-        DSToken coin = new DSToken("");
         coin.mint(500_000 ether);
 
-        DSValue pip = new DSValue();
         spot.file(name, "pip", address(pip));
         spot.file(name, "mat", ray(2 ether));
         // initial collateral price of 6
@@ -141,14 +249,11 @@ contract EndTest is DSTest {
         vat.init(name);
         vat.file(name, "line", rad(1_000_000 ether));
 
-        GemJoin gemA = new GemJoin(address(vat), name, address(coin));
-
         coin.approve(address(gemA));
         coin.approve(address(vat));
 
         vat.rely(address(gemA));
 
-        Flipper flip = new Flipper(address(vat), address(cat), name);
         vat.hope(address(flip));
         flip.rely(address(end));
         flip.rely(address(cat));
@@ -158,7 +263,6 @@ contract EndTest is DSTest {
         cat.file(name, "dunk", rad(25000 ether));
         cat.file("box", rad((10 ether) * MLN));
 
-        Clipper clip = new Clipper(address(vat), address(spot), address(dog), name);
         vat.rely(address(clip));
         vat.hope(address(clip));
         clip.rely(address(end));
@@ -178,37 +282,40 @@ contract EndTest is DSTest {
         return ilks[name];
     }
 
-    function setUp() public {
-        vat = new Vat();
-        DSToken gov = new DSToken('GOV');
-
-        flap = new Flapper(address(vat), address(gov));
-        flop = new Flopper(address(vat), address(gov));
+    function setUp1(address _vat, address _gov, address _flap, address _flop, address _vow, address _pot, address _cat, address _dog) public {
+        vat = IVat(_vat);
+        gov = IToken(_gov);
+        flap = IFlapper(_flap);
+        flop = IFlopper(_flop);
         gov.setOwner(address(flop));
 
-        vow = new Vow(address(vat), address(flap), address(flop));
+        vow = IVow(_vow);
 
-        pot = new Pot(address(vat));
+        pot = IPot(_pot);
         vat.rely(address(pot));
         pot.file("vow", address(vow));
 
-        cat = new Cat(address(vat));
+        cat = ICat(_cat);
         cat.file("vow", address(vow));
         vat.rely(address(cat));
         vow.rely(address(cat));
 
-        dog = new Dog(address(vat));
+        dog = IDog(_dog);
         dog.file("vow", address(vow));
         vat.rely(address(dog));
         vow.rely(address(dog));
+    
+        failed = false;
+    }
 
-        spot = new Spotter(address(vat));
+    function setUp2(address _spot, address _cure, address _end, address _coin, address _pip, address _gemA, address _flip, address _clip) public {
+        spot = ISpotter(_spot);
         vat.file("Line",         rad(1_000_000 ether));
         vat.rely(address(spot));
 
-        cure = new Cure();
+        cure = ICure(_cure);
 
-        end = new End();
+        end = IEnd(_end);
         end.file("vat", address(vat));
         end.file("cat", address(cat));
         end.file("dog", address(dog));
@@ -226,6 +333,12 @@ contract EndTest is DSTest {
         cure.rely(address(end));
         flap.rely(address(vow));
         flop.rely(address(vow));
+        
+        coin = IToken(_coin);
+        pip = IValue(_pip);
+        gemA = IGemJoin(_gemA);
+        flip = IFlipper(_flip);
+        clip = IClipper(_clip);
 
         failed = false;
     }
@@ -236,16 +349,16 @@ contract EndTest is DSTest {
         assertEq(cat.live(), 1);
         assertEq(vow.live(), 1);
         assertEq(pot.live(), 1);
-        assertEq(vow.flopper().live(), 1);
-        assertEq(vow.flapper().live(), 1);
+        assertEq(IFlopper(vow.flopper()).live(), 1);
+        assertEq(IFlapper(vow.flapper()).live(), 1);
         end.cage();
         assertEq(end.live(), 0);
         assertEq(vat.live(), 0);
         assertEq(cat.live(), 0);
         assertEq(vow.live(), 0);
         assertEq(pot.live(), 0);
-        assertEq(vow.flopper().live(), 0);
-        assertEq(vow.flapper().live(), 0);
+        assertEq(IFlopper(vow.flopper()).live(), 0);
+        assertEq(IFlapper(vow.flapper()).live(), 0);
     }
 
     function test_cage_pot_drip() public {

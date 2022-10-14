@@ -5,7 +5,7 @@
 pragma solidity ^0.6.12;
 
 import "./test.sol";
-import "ds-token/token.sol";
+import "./token.sol";
 
 import {Vat} from '../vat.sol';
 
