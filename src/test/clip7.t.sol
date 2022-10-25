@@ -5,7 +5,33 @@
 pragma solidity ^0.6.12;
 
 import "./test.sol";
-import "./guy.sol";
+
+interface IClipper {
+    function upchost() external;
+    function rely(address usr) external;
+}
+
+interface IVat {
+    function urns(bytes32 ilk, address usr) external view returns (uint256, uint256);
+    function rely(address usr) external;
+    function suck(address u, address v, uint rad) external;
+    function init(bytes32 ilk) external;
+    function slip(bytes32 ilk, address usr, int256 wad) external;
+    function file(bytes32 what, uint data) external;
+    function file(bytes32 ilk, bytes32 what, uint data) external;
+    function frob(bytes32 i, address u, address v, address w, int dink, int dart) external;    
+    function dai(address u) external returns (uint256); // [rad]
+    function gem(bytes32 ilk, address usr) external view returns (uint); // [wad]
+    function hope(address usr) external;
+}
+
+interface IDog {
+    function file(bytes32 what, address data) external;
+    function file(bytes32 what, uint256 data) external;
+    function file(bytes32 ilk, bytes32 what, uint256 data) external;
+    function file(bytes32 ilk, bytes32 what, address clip) external;
+    function rely(address usr) external;
+}
 
 interface ISpotter {
     function file(bytes32 ilk, bytes32 what, address pip_) external;
@@ -45,8 +71,6 @@ interface IValue {
 
 interface IGuy {
     function hope(address usr) external;
-    function take(uint256 id, uint256 amt, uint256 max, address who, bytes calldata data) external;
-    function bark(IDog dog, bytes32 ilk, address urn, address usr) external;
 }
 
 interface IStairstepExponentialDecrease {
@@ -72,7 +96,6 @@ contract ClipperTest7 is DSTest {
     IToken dai;
     IDaiJoin daiJoin;
     IClipper clip;
-    IStairstepExponentialDecrease calc;
     IPublicClip pclip;
     
     address me;
@@ -101,52 +124,6 @@ contract ClipperTest7 is DSTest {
     function _art(bytes32 ilk_, address urn_) internal view returns (uint256) {
         (,uint256 art_) = vat.urns(ilk_, urn_);
         return art_;
-    }
-
-    modifier takeSetup {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
-
-        calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
-        calc.file("step", 1);                      // Decrease every 1 second
-
-        clip.file("buf",  ray(1.25 ether));   // 25% Initial price buffer
-        clip.file("calc", address(calc));     // File price contract
-        clip.file("cusp", ray(0.3 ether));    // 70% drop before reset
-        clip.file("tail", 3600);              // 1 hour before reset
-
-        (ink, art) = vat.urns(ilk, me);
-        assertEq(ink, 40 ether);
-        assertEq(art, 100 ether);
-
-        assertEq(clip.kicks(), 0);
-        dog.bark(ilk, me, address(this));
-        assertEq(clip.kicks(), 1);
-
-        (ink, art) = vat.urns(ilk, me);
-        assertEq(ink, 0);
-        assertEq(art, 0);
-
-        (pos, tab, lot, usr, tic, top) = clip.sales(1);
-        assertEq(pos, 0);
-        assertEq(tab, rad(110 ether));
-        assertEq(lot, 40 ether);
-        assertEq(usr, me);
-        assertEq(uint256(tic), now);
-        assertEq(top, ray(5 ether)); // $4 plus 25%
-
-        assertEq(vat.gem(ilk, ali), 0);
-        assertEq(vat.dai(ali), rad(1000 ether));
-        assertEq(vat.gem(ilk, bob), 0);
-        assertEq(vat.dai(bob), rad(1000 ether));
-
-        _;
     }
 
     function ray(uint256 wad) internal pure returns (uint256) {
@@ -185,7 +162,7 @@ contract ClipperTest7 is DSTest {
         failed = false;
     }
 
-    function setUp2(address _dog, address _pip, address _clip, address _ali, address _bob, address _calc, address _pclip) public {
+    function setUp2(address _dog, address _pip, address _clip, address _ali, address _bob, address _pclip) public {
         dog = IDog(_dog);
         dog.file("vow", address(vow));
         vat.rely(address(dog));
@@ -238,8 +215,6 @@ contract ClipperTest7 is DSTest {
         vat.suck(address(0), address(this), rad(1000 ether));
         vat.suck(address(0), ali,  rad(1000 ether));
         vat.suck(address(0), bob,  rad(1000 ether));
-
-        calc = IStairstepExponentialDecrease(_calc);
 
         pclip = IPublicClip(_pclip);
 

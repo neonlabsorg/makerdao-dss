@@ -56,7 +56,7 @@ interface IExchange {
 }
 
 interface IDog {
-    function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id);
+    function bark_with_timestamp(bytes32 ilk, address urn, address kpr, uint256 timestamp) external returns (uint256 id);
     function file(bytes32 what, address data) external;
     function file(bytes32 what, uint256 data) external;
     function file(bytes32 ilk, bytes32 what, uint256 data) external;
@@ -93,20 +93,26 @@ interface IClipper {
 
 interface IGuy {
     function hope(address usr) external;
-    function take(uint256 id, uint256 amt, uint256 max, address who, bytes calldata data) external;
 }
 
-contract ClipperTest1 is DSTest {
+interface IStairstepExponentialDecrease {
+    function file(bytes32 what, uint256 data) external;
+}
+
+contract ClipperTest9 is DSTest {
     IVat     vat;
     IDog     dog;
     ISpotter spot;
     IVow     vow;
     IValue pip;
+    IValue pip2;
     IToken gold;
     IGemJoin goldJoin;
     IToken dai;
     IDaiJoin daiJoin;
+
     IClipper clip;
+    IClipper clip2;
     
     address me;
     IExchange exchange;
@@ -172,7 +178,7 @@ contract ClipperTest1 is DSTest {
         failed = false;
     }
 
-    function setUp2(address _dog, address _pip, address _clip, address _ali, address _bob) public {
+    function setUp2(address _dog, address _pip, address _pip2, address _clip, address _clip2, address _ali, address _bob) public {
         dog = IDog(_dog);
         dog.file("vow", address(vow));
         vat.rely(address(dog));
@@ -183,6 +189,7 @@ contract ClipperTest1 is DSTest {
         vat.slip(ilk, me, 1000 ether);
 
         pip = IValue(_pip);
+        pip2 = IValue(_pip2);
         pip.poke(bytes32(goldPrice)); // Spot = $2.5
 
         spot.file(ilk, "pip", address(pip));
@@ -199,6 +206,7 @@ contract ClipperTest1 is DSTest {
 
         // dust and chop filed previously so clip.chost will be set correctly
         clip = IClipper(_clip);
+        clip2 = IClipper(_clip2);
         clip.upchost();
         clip.rely(address(dog));
 
@@ -229,42 +237,58 @@ contract ClipperTest1 is DSTest {
         failed = false;
     }
 
-    function test_change_dog() public {
-        assertTrue(clip.dog() != address(123));
-        clip.file("dog", address(123));
-        assertEq(clip.dog(), address(123));
+    uint256 tab;
+    uint256 dirt;
+    bytes32 constant ilk2 = "silver";
+
+    function setUp3(uint256 timestamp) public {
+        assertEq(dog.Dirt(), 0);
+        (,,, dirt) = dog.ilks(ilk);
+        assertEq(dirt, 0);
+
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
+
+        (, tab,,,,) = clip.sales(1);
+
+        assertEq(dog.Dirt(), tab);
+        (,,, dirt) = dog.ilks(ilk);
+        assertEq(dirt, tab);
+
+        clip2.upchost();
+        clip2.rely(address(dog));
+
+        dog.file(ilk2, "clip", address(clip2));
+        dog.file(ilk2, "chop", 1.1 ether);
+        dog.file(ilk2, "hole", rad(1000 ether));
+        dog.rely(address(clip2));
+
+        vat.init(ilk2);
+        vat.rely(address(clip2));
+        vat.file(ilk2, "line", rad(100 ether));
+
+        vat.slip(ilk2, me, 40 ether);
+
+        pip2.poke(bytes32(goldPrice)); // Spot = $2.5
+
+        spot.file(ilk2, "pip", address(pip2));
+        spot.file(ilk2, "mat", ray(2 ether));
+        spot.poke(ilk2);
+        vat.frob(ilk2, me, me, me, 40 ether, 100 ether);
+        pip2.poke(bytes32(uint256(4 ether))); // Spot = $2
+        spot.poke(ilk2);
+
+        failed = false;
     }
 
-    function test_get_chop() public {
-        uint256 chop = dog.chop(ilk);
-        (, uint256 chop2,,) = dog.ilks(ilk);
-        assertEq(chop, chop2);
-    }
+    function test_Hole_hole(uint256 timestamp) public {
+        dog.bark_with_timestamp(ilk2, me, address(this), timestamp);
 
-    function testSelfFail_kick_zero_price() public {
-        pip.poke(bytes32(0));
-        dog.bark(ilk, me, address(this));
-        fail();
-    }
+        (, uint256 tab2,,,,) = clip2.sales(1);
 
-    function try_kick(uint256 tab, uint256 lot, address usr, address kpr) internal returns (bool ok) {
-        string memory sig = "kick(uint256,uint256,address,address)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, tab, lot, usr, kpr));
-    }
-
-    function test_kick_basic() public {
-        assertTrue(try_kick(1 ether, 2 ether, address(1), address(this)));
-    }
-
-    function test_kick_zero_tab() public {
-        assertTrue(!try_kick(0, 2 ether, address(1), address(this)));
-    }
-
-    function test_kick_zero_lot() public {
-        assertTrue(!try_kick(1 ether, 0, address(1), address(this)));
-    }
-
-    function test_kick_zero_usr() public {
-        assertTrue(!try_kick(1 ether, 2 ether, address(0), address(this)));
+        assertEq(dog.Dirt(), tab + tab2);
+        (,,, dirt) = dog.ilks(ilk);
+        (,,, uint256 dirt2) = dog.ilks(ilk2);
+        assertEq(dirt, tab);
+        assertEq(dirt2, tab2);
     }
 }

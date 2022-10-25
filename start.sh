@@ -70,6 +70,16 @@ testcase() {
   fi
 }
 
+testcase_with_timestamp() {
+  sendtx $test_contract "$method(uint256)" $(seth block latest timestamp)
+  failed=$(seth call "$test_contract" 'failed()(bool)')
+  if [[ "$failed" == true ]]; then
+    if [[ "$method" == testFail* ]]; then pass; else fail; fi
+  else
+    if [[ "$method" == testFail* ]]; then fail; else pass; fi
+  fi
+}
+
 run_tests() {
   status=124
   while (($status==124)); do
@@ -314,10 +324,6 @@ run_clip_tests_with_predeploy1() {
       echo clip: $clip
       rely $clip
 
-      create Trader $clip $vat $gold $goldJoin $dai $daiJoin $exchange
-      trader=$result
-      echo trader: $trader
-
       create GuyForClipper $clip
       ali=$result
       echo ali: $ali
@@ -326,13 +332,9 @@ run_clip_tests_with_predeploy1() {
       bob=$result
       echo bob: $bob
 
-      create StairstepExponentialDecrease
-      calc=$result
-      echo calc: $calc
-
       status=124
       while (($status==124)); do
-        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address, address, address)' $dog $pip $clip $trader $ali $bob $calc
+        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address)' $dog $pip $clip $ali $bob
         status=$?
       done
 
@@ -348,6 +350,124 @@ run_clip_tests_with_predeploy1() {
 }
 
 run_clip_tests_with_predeploy2() {
+  create $contractName
+  test_contract=$result
+  echo $contractName address: $test_contract
+
+  for method in $(cat abi/$contractName.abi | python3 -mjson.tool | grep \"name\" | grep \"test | sed 's/"name": "//g' | sed 's/",//g'); do
+    echo Start processing $method
+#     echo Start processing $method >> neon_tests_result.md
+
+    sendtx $test_contract 'fail()'
+
+    create Vat
+    vat=$result
+    echo vat: $vat
+    rely $vat
+
+    create Spotter $vat
+    spot=$result
+    echo spot: $spot
+    rely $spot
+
+    create Vow $vat 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000
+    vow=$result
+    echo vow: $vow
+    rely $vow
+
+    create DSToken '"GLD"'
+    gold=$result
+    echo gold: $gold
+    setOwner $gold
+
+    ilk=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="gold"))')
+    echo gold ---bytes32---> $ilk
+
+    create GemJoin $vat $ilk $gold
+    goldJoin=$result
+    echo goldJoin: $goldJoin
+    rely $goldJoin
+
+    create DSToken '"DAI"'
+    dai=$result
+    echo dai: $dai
+    setOwner $dai
+
+    create DaiJoin $vat $dai
+    daiJoin=$result
+    echo daiJoin: $daiJoin
+    rely $daiJoin
+    
+    create Exchange $gold $dai 5500000000000000000
+    exchange=$result
+    echo exchange: $exchange
+
+    status=124
+    while (($status==124)); do
+      timeout 60s seth send $test_contract 'setUp1(address, address, address, address, address, address, address, address)' $vat $spot $vow $gold $goldJoin $dai $daiJoin $exchange
+      status=$?
+    done
+
+    result=$(seth call "$test_contract" 'failed()(bool)')
+    if [[ "$result" == true ]]; then
+      echo "FAIL $contractName::setUp1()"
+      echo "FAIL $contractName::setUp1()" >> neon_tests_result.md
+    else
+      sendtx $test_contract 'fail()'
+
+      create Dog $vat
+      dog=$result
+      echo dog: $dog
+      rely $dog
+
+      create DSValue
+      pip=$result
+      echo pip: $pip
+      setOwner $pip
+      
+      ilk=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="gold"))')
+      echo gold ---bytes32---> $ilk
+
+      create Clipper $vat $spot $dog $ilk
+      clip=$result
+      echo clip: $clip
+      rely $clip
+
+      create Trader $clip $vat $gold $goldJoin $dai $daiJoin $exchange
+      trader=$result
+      echo trader: $trader
+
+      create GuyForClipper $clip
+      ali=$result
+      echo ali: $ali
+
+      create GuyForClipper $clip
+      bob=$result
+      echo bob: $bob
+
+      create StairstepExponentialDecrease
+      calc=$result
+      echo calc: $calc
+      rely $calc
+
+      status=124
+      while (($status==124)); do
+        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address, address, address)' $dog $pip $clip $trader $ali $bob $calc
+        status=$?
+      done
+
+      result=$(seth call "$test_contract" 'failed()(bool)')
+      if [[ "$result" == true ]]; then
+        echo "FAIL $contractName::setUp2()"
+        echo "FAIL $contractName::setUp2()" >> neon_tests_result.md
+      else
+        testcase_with_timestamp
+      fi
+    fi
+  done
+}
+
+run_clip_tests_with_predeploy3() {
   create $contractName
   test_contract=$result
   echo $contractName address: $test_contract
@@ -453,6 +573,7 @@ run_clip_tests_with_predeploy2() {
       create StairstepExponentialDecrease
       calc=$result
       echo calc: $calc
+      rely $calc
 
       status=124
       while (($status==124)); do
@@ -468,13 +589,13 @@ run_clip_tests_with_predeploy2() {
         echo "FAIL $contractName::setUp2()"
         echo "FAIL $contractName::setUp2()" >> neon_tests_result.md
       else
-        testcase
+        testcase_with_timestamp
       fi
     fi
   done
 }
 
-run_clip_tests_with_predeploy3() {
+run_clip_tests_with_predeploy4() {
   create $contractName
   test_contract=$result
   echo $contractName address: $test_contract
@@ -565,17 +686,13 @@ run_clip_tests_with_predeploy3() {
       bob=$result
       echo bob: $bob
 
-      create StairstepExponentialDecrease
-      calc=$result
-      echo calc: $calc
-
       create PublicClip $vat $spot $dog $ilk
       pclip=$result
       echo pclip: $pclip
 
       status=124
       while (($status==124)); do
-        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address, address, address)' $dog $pip $clip $ali $bob $calc $pclip
+        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address, address)' $dog $pip $clip $ali $bob $pclip
         status=$?
       done
 
@@ -585,6 +702,260 @@ run_clip_tests_with_predeploy3() {
         echo "FAIL $contractName::setUp2()" >> neon_tests_result.md
       else
         testcase
+      fi
+    fi
+  done
+}
+
+run_clip_tests_with_predeploy5() {
+  create $contractName
+  test_contract=$result
+  echo $contractName address: $test_contract
+
+  for method in $(cat abi/$contractName.abi | python3 -mjson.tool | grep \"name\" | grep \"test | sed 's/"name": "//g' | sed 's/",//g'); do
+    echo Start processing $method
+#     echo Start processing $method >> neon_tests_result.md
+
+    sendtx $test_contract 'fail()'
+
+    create Vat
+    vat=$result
+    echo vat: $vat
+    rely $vat
+
+    create Spotter $vat
+    spot=$result
+    echo spot: $spot
+    rely $spot
+
+    create Vow $vat 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000
+    vow=$result
+    echo vow: $vow
+    rely $vow
+
+    create DSToken '"GLD"'
+    gold=$result
+    echo gold: $gold
+    setOwner $gold
+
+    ilk=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="gold"))')
+    echo gold ---bytes32---> $ilk
+
+    create GemJoin $vat $ilk $gold
+    goldJoin=$result
+    echo goldJoin: $goldJoin
+    rely $goldJoin
+
+    create DSToken '"DAI"'
+    dai=$result
+    echo dai: $dai
+    setOwner $dai
+
+    create DaiJoin $vat $dai
+    daiJoin=$result
+    echo daiJoin: $daiJoin
+    rely $daiJoin
+    
+    create Exchange $gold $dai 5500000000000000000
+    exchange=$result
+    echo exchange: $exchange
+
+    status=124
+    while (($status==124)); do
+      timeout 60s seth send $test_contract 'setUp1(address, address, address, address, address, address, address, address)' $vat $spot $vow $gold $goldJoin $dai $daiJoin $exchange
+      status=$?
+    done
+
+    result=$(seth call "$test_contract" 'failed()(bool)')
+    if [[ "$result" == true ]]; then
+      echo "FAIL $contractName::setUp1()"
+      echo "FAIL $contractName::setUp1()" >> neon_tests_result.md
+    else
+      sendtx $test_contract 'fail()'
+
+      create Dog $vat
+      dog=$result
+      echo dog: $dog
+      rely $dog
+
+      create DSValue
+      pip=$result
+      echo pip: $pip
+      setOwner $pip
+      
+      ilk=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="gold"))')
+      echo gold ---bytes32---> $ilk
+
+      create Clipper $vat $spot $dog $ilk
+      clip=$result
+      echo clip: $clip
+      rely $clip
+
+      create GuyForClipper $clip
+      ali=$result
+      echo ali: $ali
+
+      create GuyForClipper $clip
+      bob=$result
+      echo bob: $bob
+
+      create StairstepExponentialDecrease
+      calc=$result
+      echo calc: $calc
+      rely $calc
+
+      status=124
+      while (($status==124)); do
+        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address, address)' $dog $pip $clip $ali $bob $calc
+        status=$?
+      done
+
+      result=$(seth call "$test_contract" 'failed()(bool)')
+      if [[ "$result" == true ]]; then
+        echo "FAIL $contractName::setUp2()"
+        echo "FAIL $contractName::setUp2()" >> neon_tests_result.md
+      else
+        testcase_with_timestamp
+      fi
+    fi
+  done
+}
+
+run_clip_tests_with_predeploy6() {
+  create $contractName
+  test_contract=$result
+  echo $contractName address: $test_contract
+  for method in $(cat abi/$contractName.abi | python3 -mjson.tool | grep \"name\" | grep \"test | sed 's/"name": "//g' | sed 's/",//g'); do
+    echo Start processing $method
+#     echo Start processing $method >> neon_tests_result.md
+
+    sendtx $test_contract 'fail()'
+
+    create Vat
+    vat=$result
+    echo vat: $vat
+    rely $vat
+
+    create Spotter $vat
+    spot=$result
+    echo spot: $spot
+    rely $spot
+
+    create Vow $vat 0x0000000000000000000000000000000000000000 0x0000000000000000000000000000000000000000
+    vow=$result
+    echo vow: $vow
+    rely $vow
+
+    create DSToken '"GLD"'
+    gold=$result
+    echo gold: $gold
+    setOwner $gold
+
+    ilk=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="gold"))')
+    echo gold ---bytes32---> $ilk
+
+    create GemJoin $vat $ilk $gold
+    goldJoin=$result
+    echo goldJoin: $goldJoin
+    rely $goldJoin
+
+    create DSToken '"DAI"'
+    dai=$result
+    echo dai: $dai
+    setOwner $dai
+
+    create DaiJoin $vat $dai
+    daiJoin=$result
+    echo daiJoin: $daiJoin
+    rely $daiJoin
+    
+    create Exchange $gold $dai 5500000000000000000
+    exchange=$result
+    echo exchange: $exchange
+
+    status=124
+    while (($status==124)); do
+      timeout 60s seth send $test_contract 'setUp1(address, address, address, address, address, address, address, address)' $vat $spot $vow $gold $goldJoin $dai $daiJoin $exchange
+      status=$?
+    done
+    result=$(seth call "$test_contract" 'failed()(bool)')
+    if [[ "$result" == true ]]; then
+      echo "FAIL $contractName::setUp1()"
+      echo "FAIL $contractName::setUp1()" >> neon_tests_result.md
+    else
+      sendtx $test_contract 'fail()'
+
+      create Dog $vat
+      dog=$result
+      echo dog: $dog
+      rely $dog
+      
+      create DSValue
+      pip=$result
+      echo pip: $pip
+      setOwner $pip
+
+      create DSValue
+      pip2=$result
+      echo pip2: $pip2
+      setOwner $pip2
+
+      ilk=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="gold"))')
+      echo gold ---bytes32---> $ilk
+
+      create Clipper $vat $spot $dog $ilk
+      clip=$result
+      echo clip: $clip
+      rely $clip
+      
+      ilk2=$(python3 -c 'from web3 import Web3; print(Web3.toHex(text="silver"))')
+      echo gold ---bytes32---> $ilk2
+
+      create Clipper $vat $spot $dog $ilk2
+      clip2=$result
+      echo clip2: $clip2
+      rely $clip2
+      
+      create GuyForClipper $clip
+      ali=$result
+      echo ali: $ali
+
+      create GuyForClipper $clip
+      bob=$result
+      echo bob: $bob
+
+      status=124
+      while (($status==124)); do
+        timeout 60s seth send $test_contract 'setUp2(address, address, address, address, address, address, address)' $dog $pip $pip2 $clip $clip2 $ali $bob
+        status=$?
+      done
+      status=124
+      while (($status==124)); do
+        result=$(timeout 60s seth call "$test_contract" 'failed()(bool)')
+        status=$?
+      done
+      if [[ "$result" == true ]]; then
+        echo "FAIL $contractName::setUp2()"
+        echo "FAIL $contractName::setUp2()" >> neon_tests_result.md
+      else
+        sendtx $test_contract 'fail()'
+
+        status=124
+        while (($status==124)); do
+          timeout 60s seth send $test_contract 'setUp3(uint256)' $(seth block latest timestamp)
+          status=$?
+        done
+        status=124
+        while (($status==124)); do
+          result=$(timeout 60s seth call "$test_contract" 'failed()(bool)')
+          status=$?
+        done
+        if [[ "$result" == true ]]; then
+          echo "FAIL $contractName::setUp3()"
+          echo "FAIL $contractName::setUp3()" >> neon_tests_result.md
+        else
+          testcase_with_timestamp
+        fi
       fi
     fi
   done
@@ -782,17 +1153,21 @@ echo
 contractName=ClipperTest1
 run_clip_tests_with_predeploy1
 contractName=ClipperTest2
-run_clip_tests_with_predeploy1
-contractName=ClipperTest3
-run_clip_tests_with_predeploy1
-contractName=ClipperTest4
 run_clip_tests_with_predeploy2
-contractName=ClipperTest5
-run_clip_tests_with_predeploy1
-contractName=ClipperTest6
-run_clip_tests_with_predeploy1
-contractName=ClipperTest7
+contractName=ClipperTest3
+run_clip_tests_with_predeploy2
+contractName=ClipperTest4
 run_clip_tests_with_predeploy3
+contractName=ClipperTest5
+run_clip_tests_with_predeploy2
+contractName=ClipperTest6
+run_clip_tests_with_predeploy2
+contractName=ClipperTest7
+run_clip_tests_with_predeploy4
+contractName=ClipperTest8
+run_clip_tests_with_predeploy5
+contractName=ClipperTest9
+run_clip_tests_with_predeploy6
 echo
 contractName=DSRTest
 run_tests

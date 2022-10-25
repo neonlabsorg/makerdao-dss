@@ -56,7 +56,7 @@ interface IExchange {
 }
 
 interface IDog {
-    function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id);
+    function bark_with_timestamp(bytes32 ilk, address urn, address kpr, uint256 timestamp) external returns (uint256 id);
     function file(bytes32 what, address data) external;
     function file(bytes32 what, uint256 data) external;
     function file(bytes32 ilk, bytes32 what, uint256 data) external;
@@ -94,7 +94,7 @@ interface IClipper {
 interface IGuy {
     function hope(address usr) external;
     function take(uint256 id, uint256 amt, uint256 max, address who, bytes calldata data) external;
-    function bark(IDog dog, bytes32 ilk, address urn, address usr) external;
+    function bark_with_timestamp(IDog dog, bytes32 ilk, address urn, address usr, uint256 timestamp) external;
 }
 
 interface IStairstepExponentialDecrease {
@@ -146,16 +146,16 @@ contract ClipperTest4 is DSTest {
         return art_;
     }
 
-    modifier takeSetup {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
+    uint256 pos;
+    uint256 tab;
+    uint256 lot;
+    address usr;
+    uint96  tic;
+    uint256 top;
+    uint256 ink;
+    uint256 art;
 
+    modifier takeSetup(uint256 timestamp) {
         calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
         calc.file("step", 1);                      // Decrease every 1 second
 
@@ -169,7 +169,7 @@ contract ClipperTest4 is DSTest {
         assertEq(art, 100 ether);
 
         assertEq(clip.kicks(), 0);
-        dog.bark(ilk, me, address(this));
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
         assertEq(clip.kicks(), 1);
 
         (ink, art) = vat.urns(ilk, me);
@@ -289,56 +289,7 @@ contract ClipperTest4 is DSTest {
         failed = false;
     }
 
-    function test_Hole_hole() public {
-        assertEq(dog.Dirt(), 0);
-        (,,, uint256 dirt) = dog.ilks(ilk);
-        assertEq(dirt, 0);
-
-        dog.bark(ilk, me, address(this));
-
-        (, uint256 tab,,,,) = clip.sales(1);
-
-        assertEq(dog.Dirt(), tab);
-        (,,, dirt) = dog.ilks(ilk);
-        assertEq(dirt, tab);
-
-        bytes32 ilk2 = "silver";
-
-        clip2.upchost();
-        clip2.rely(address(dog));
-
-        dog.file(ilk2, "clip", address(clip2));
-        dog.file(ilk2, "chop", 1.1 ether);
-        dog.file(ilk2, "hole", rad(1000 ether));
-        dog.rely(address(clip2));
-
-        vat.init(ilk2);
-        vat.rely(address(clip2));
-        vat.file(ilk2, "line", rad(100 ether));
-
-        vat.slip(ilk2, me, 40 ether);
-
-        pip2.poke(bytes32(goldPrice)); // Spot = $2.5
-
-        spot.file(ilk2, "pip", address(pip2));
-        spot.file(ilk2, "mat", ray(2 ether));
-        spot.poke(ilk2);
-        vat.frob(ilk2, me, me, me, 40 ether, 100 ether);
-        pip2.poke(bytes32(uint256(4 ether))); // Spot = $2
-        spot.poke(ilk2);
-
-        dog.bark(ilk2, me, address(this));
-
-        (, uint256 tab2,,,,) = clip2.sales(1);
-
-        assertEq(dog.Dirt(), tab + tab2);
-        (,,, dirt) = dog.ilks(ilk);
-        (,,, uint256 dirt2) = dog.ilks(ilk2);
-        assertEq(dirt, tab);
-        assertEq(dirt2, tab2);
-    }
-
-    function test_Clipper_yank() public takeSetup {
+    function test_Clipper_yank(uint256 timestamp) public takeSetup(timestamp) {
         uint256 preGemBalance = vat.gem(ilk, address(this));
         (,, uint256 origLot,,,) = clip.sales(1);
 
@@ -348,7 +299,7 @@ contract ClipperTest4 is DSTest {
         emit log_named_uint("yank gas", startGas - endGas);
 
         // Assert that the auction was deleted.
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);
@@ -365,10 +316,10 @@ contract ClipperTest4 is DSTest {
         assertEq(vat.gem(ilk, address(this)), preGemBalance + origLot);
     }
 
-    function test_gas_bark_kick() public {
+    function test_gas_bark_kick(uint256 timestamp) public {
         // Assertions to make sure setup is as expected.
         assertEq(clip.kicks(), 0);
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);
@@ -377,17 +328,17 @@ contract ClipperTest4 is DSTest {
         assertEq(top, 0);
         assertEq(vat.gem(ilk, me), 960 ether);
         assertEq(vat.dai(ali), rad(1000 ether));
-        (uint256 ink, uint256 art) = vat.urns(ilk, me);
+        (ink, art) = vat.urns(ilk, me);
         assertEq(ink, 40 ether);
         assertEq(art, 100 ether);
 
         uint256 preGas = gasleft();
-        IGuy(ali).bark(dog, ilk, me, ali);
+        IGuy(ali).bark_with_timestamp(dog, ilk, me, ali, timestamp);
         uint256 diffGas = preGas - gasleft();
         log_named_uint("bark with kick gas", diffGas);
     }
 
-    function test_gas_partial_take() public takeSetup {
+    function test_gas_partial_take(uint256 timestamp) public takeSetup(timestamp) {
         uint256 preGas = gasleft();
         // Bid so owe (= 11 * 5 = 55 RAD) < tab (= 110 RAD)
         IGuy(ali).take({
@@ -405,7 +356,7 @@ contract ClipperTest4 is DSTest {
         assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
 
         // Assert auction DOES NOT end
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, rad(55 ether));  // 110 - 5 * 11
         assertEq(lot, 29 ether);       // 40 - 11
@@ -414,7 +365,7 @@ contract ClipperTest4 is DSTest {
         assertEq(top, ray(5 ether));
     }
 
-    function test_gas_full_take() public takeSetup {
+    function test_gas_full_take(uint256 timestamp) public takeSetup(timestamp) {
         uint256 preGas = gasleft();
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -433,7 +384,7 @@ contract ClipperTest4 is DSTest {
         assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
 
         // Assert auction ends
-        (uint256 pos, uint256 tab, uint256 lot, address usr, uint256 tic, uint256 top) = clip.sales(1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
         assertEq(lot, 0);

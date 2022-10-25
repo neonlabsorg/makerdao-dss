@@ -45,8 +45,6 @@ interface IValue {
 
 interface IGuy {
     function hope(address usr) external;
-    function take(uint256 id, uint256 amt, uint256 max, address who, bytes calldata data) external;
-    function bark(IDog dog, bytes32 ilk, address urn, address usr) external;
 }
 
 interface IStairstepExponentialDecrease {
@@ -95,16 +93,16 @@ contract ClipperTest6 is DSTest {
         return art_;
     }
 
-    modifier takeSetup {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
+    uint256 pos;
+    uint256 tab;
+    uint256 lot;
+    address usr;
+    uint96  tic;
+    uint256 top;
+    uint256 ink;
+    uint256 art;
 
+    modifier takeSetup(uint256 timestamp) {
         calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
         calc.file("step", 1);                      // Decrease every 1 second
 
@@ -118,7 +116,7 @@ contract ClipperTest6 is DSTest {
         assertEq(art, 100 ether);
 
         assertEq(clip.kicks(), 0);
-        dog.bark(ilk, me, address(this));
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
         assertEq(clip.kicks(), 1);
 
         (ink, art) = vat.urns(ilk, me);
@@ -237,43 +235,43 @@ contract ClipperTest6 is DSTest {
         failed = false;
     }
 
-    function testSelfFail_reentrancy_file_addr() public takeSetup {
-        FileAddrGuy usr = new FileAddrGuy(clip);
-        usr.hope(address(clip));
-        vat.suck(address(0), address(usr),  rad(1000 ether));
-        clip.rely(address(usr));
+    function testSelfFail_reentrancy_file_addr(uint256 timestamp) public takeSetup(timestamp) {
+        FileAddrGuy usr_ = new FileAddrGuy(clip);
+        usr_.hope(address(clip));
+        vat.suck(address(0), address(usr_),  rad(1000 ether));
+        clip.rely(address(usr_));
 
-        usr.take({
+        usr_.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(usr),
+            who: address(usr_),
             data: "hey"
         });
 
         fail();
     }
 
-    function testSelfFail_reentrancy_yank() public takeSetup {
-        YankGuy usr = new YankGuy(clip);
-        usr.hope(address(clip));
-        vat.suck(address(0), address(usr),  rad(1000 ether));
-        clip.rely(address(usr));
+    function testSelfFail_reentrancy_yank(uint256 timestamp) public takeSetup(timestamp) {
+        YankGuy usr_ = new YankGuy(clip);
+        usr_.hope(address(clip));
+        vat.suck(address(0), address(usr_),  rad(1000 ether));
+        clip.rely(address(usr_));
 
-        usr.take({
+        usr_.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(usr),
+            who: address(usr_),
             data: "hey"
         });
 
         fail();
     }
 
-    function testSelfFail_take_impersonation() public takeSetup { // should fail, but works
-        GuyForClipper usr = new GuyForClipper(clip);
-        usr.take({
+    function testSelfFail_take_impersonation(uint256 timestamp) public takeSetup(timestamp) { // should fail, but works
+        GuyForClipper usr_ = new GuyForClipper(clip);
+        usr_.take({
             id: 1,
             amt: 99999999999999 ether,
             max: ray(99999999999999 ether),

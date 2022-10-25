@@ -62,9 +62,43 @@ contract DogTest2 is DSTest {
         assertEq(art, actualArt);
     }
 
+    function test_file_chop() public {
+        dog.file(ilk, "chop", WAD);
+        dog.file(ilk, "chop", WAD * 113 / 100);
+    }
+
+    function testSelfFail_file_chop_lt_WAD() public {
+        dog.file(ilk, "chop", WAD - 1);
+        fail();
+    }
+
+    function testSelfFail_file_chop_eq_zero() public {
+        dog.file(ilk, "chop", 0);
+        fail();
+    }
+
+    function testSelfFail_file_clip_wrong_ilk() public {
+        dog.file("mismatched_ilk", "clip", address(clip));
+        fail();
+    }
+
     function try_bark(bytes32 ilk_, address usr_, address kpr_) internal returns (bool ok) {
         string memory sig = "bark(bytes32,address,address)";
         (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk_, usr_, kpr_));
+    }
+
+    function test_bark_basic() public {
+        setUrn(WAD, 2 * THOUSAND * WAD);
+        dog.bark(ilk, usr, address(this));
+        (uint256 ink, uint256 art) = vat.urns(ilk, usr);
+        assertEq(ink, 0);
+        assertEq(art, 0);
+    }
+
+    function testSelfFail_bark_not_unsafe() public {
+        setUrn(WAD, 500 * WAD);
+        dog.bark(ilk, usr, address(this));
+        fail();
     }
 
     function test_bark_do_not_create_dusty_auction_hole() public {

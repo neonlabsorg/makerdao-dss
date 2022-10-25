@@ -98,6 +98,12 @@ contract Vow {
         sin[now] = add(sin[now], tab);
         Sin = add(Sin, tab);
     }
+
+    function fess_with_timestamp(uint tab, uint256 timestamp) external auth {
+        sin[timestamp] = add(sin[timestamp], tab);
+        Sin = add(Sin, tab);
+    }
+
     // Pop from debt-queue
     function flog(uint era) external {
         require(add(era, wait) <= now, "Vow/wait-not-finished");

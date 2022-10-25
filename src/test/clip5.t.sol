@@ -46,7 +46,6 @@ interface IValue {
 interface IGuy {
     function hope(address usr) external;
     function take(uint256 id, uint256 amt, uint256 max, address who, bytes calldata data) external;
-    function bark(IDog dog, bytes32 ilk, address urn, address usr) external;
 }
 
 interface IStairstepExponentialDecrease {
@@ -95,16 +94,16 @@ contract ClipperTest5 is DSTest {
         return art_;
     }
 
-    modifier takeSetup {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
+    uint256 pos;
+    uint256 tab;
+    uint256 lot;
+    address usr;
+    uint96  tic;
+    uint256 top;
+    uint256 ink;
+    uint256 art;
 
+    modifier takeSetup(uint256 timestamp) {
         calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
         calc.file("step", 1);                      // Decrease every 1 second
 
@@ -118,7 +117,7 @@ contract ClipperTest5 is DSTest {
         assertEq(art, 100 ether);
 
         assertEq(clip.kicks(), 0);
-        dog.bark(ilk, me, address(this));
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
         assertEq(clip.kicks(), 1);
 
         (ink, art) = vat.urns(ilk, me);
@@ -237,64 +236,64 @@ contract ClipperTest5 is DSTest {
         failed = false;
     }
 
-    function testSelfFail_reentrancy_take() public takeSetup {
-        BadGuy usr = new BadGuy(clip);
-        usr.hope(address(clip));
-        vat.suck(address(0), address(usr),  rad(1000 ether));
+    function testSelfFail_reentrancy_take(uint256 timestamp) public takeSetup(timestamp) {
+        BadGuy _usr = new BadGuy(clip);
+        _usr.hope(address(clip));
+        vat.suck(address(0), address(_usr),  rad(1000 ether));
 
-        usr.take({
+        _usr.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(usr),
+            who: address(_usr),
             data: "hey"
         });
 
         fail();
     }
 
-    function testSelfFail_reentrancy_redo() public takeSetup {
-        RedoGuy usr = new RedoGuy(clip);
-        usr.hope(address(clip));
-        vat.suck(address(0), address(usr),  rad(1000 ether));
+    function testSelfFail_reentrancy_redo(uint256 timestamp) public takeSetup(timestamp) {
+        RedoGuy _usr = new RedoGuy(clip);
+        _usr.hope(address(clip));
+        vat.suck(address(0), address(_usr),  rad(1000 ether));
 
-        usr.take({
+        _usr.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(usr),
+            who: address(_usr),
             data: "hey"
         });
 
         fail();
     }
 
-    function testSelfFail_reentrancy_kick() public takeSetup {
-        KickGuy usr = new KickGuy(clip);
-        usr.hope(address(clip));
-        vat.suck(address(0), address(usr),  rad(1000 ether));
-        clip.rely(address(usr));
+    function testSelfFail_reentrancy_kick(uint256 timestamp) public takeSetup(timestamp) {
+        KickGuy _usr = new KickGuy(clip);
+        _usr.hope(address(clip));
+        vat.suck(address(0), address(_usr),  rad(1000 ether));
+        clip.rely(address(_usr));
 
-        usr.take({
+        _usr.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(usr),
+            who: address(_usr),
             data: "hey"
         });
     }
 
-    function testSelfFail_reentrancy_file_uint() public takeSetup {
-        FileUintGuy usr = new FileUintGuy(clip);
-        usr.hope(address(clip));
-        vat.suck(address(0), address(usr),  rad(1000 ether));
-        clip.rely(address(usr));
+    function testSelfFail_reentrancy_file_uint(uint256 timestamp) public takeSetup(timestamp) {
+        FileUintGuy _usr = new FileUintGuy(clip);
+        _usr.hope(address(clip));
+        vat.suck(address(0), address(_usr),  rad(1000 ether));
+        clip.rely(address(_usr));
 
-        usr.take({
+        _usr.take({
             id: 1,
             amt: 25 ether,
             max: ray(5 ether),
-            who: address(usr),
+            who: address(_usr),
             data: "hey"
         });
 

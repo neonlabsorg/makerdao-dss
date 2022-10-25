@@ -40,7 +40,7 @@ interface IVat {
 }
 
 interface IDog {
-    function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id);
+    function bark_with_timestamp(bytes32 ilk, address urn, address kpr, uint256 timestamp) external returns (uint256 id);
     function file(bytes32 what, address data) external;
     function file(bytes32 what, uint256 data) external;
     function file(bytes32 ilk, bytes32 what, uint256 data) external;
@@ -80,8 +80,8 @@ contract GuyForClipper {
         });
     }
 
-    function bark(IDog dog, bytes32 ilk, address urn, address usr) external {
-        dog.bark(ilk, urn, usr);
+    function bark_with_timestamp(IDog dog, bytes32 ilk, address urn, address usr, uint256 timestamp) external {
+        dog.bark_with_timestamp(ilk, urn, usr, timestamp);
     }
 }
 

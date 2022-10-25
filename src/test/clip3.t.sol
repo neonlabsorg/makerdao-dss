@@ -56,7 +56,7 @@ interface IExchange {
 }
 
 interface IDog {
-    function bark(bytes32 ilk, address urn, address kpr) external returns (uint256 id);
+    function bark_with_timestamp(bytes32 ilk, address urn, address kpr, uint256 timestamp) external returns (uint256 id);
     function file(bytes32 what, address data) external;
     function file(bytes32 what, uint256 data) external;
     function file(bytes32 ilk, bytes32 what, uint256 data) external;
@@ -94,7 +94,6 @@ interface IClipper {
 interface IGuy {
     function hope(address usr) external;
     function take(uint256 id, uint256 amt, uint256 max, address who, bytes calldata data) external;
-    function bark(IDog dog, bytes32 ilk, address urn, address usr) external;
 }
 
 interface IStairstepExponentialDecrease {
@@ -143,16 +142,16 @@ contract ClipperTest3 is DSTest {
         return art_;
     }
 
-    modifier takeSetup {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
+    uint256 pos;
+    uint256 tab;
+    uint256 lot;
+    address usr;
+    uint96  tic;
+    uint256 top;
+    uint256 ink;
+    uint256 art;
 
+    modifier takeSetup(uint256 timestamp) {
         calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
         calc.file("step", 1);                      // Decrease every 1 second
 
@@ -166,7 +165,7 @@ contract ClipperTest3 is DSTest {
         assertEq(art, 100 ether);
 
         assertEq(clip.kicks(), 0);
-        dog.bark(ilk, me, address(this));
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
         assertEq(clip.kicks(), 1);
 
         (ink, art) = vat.urns(ilk, me);
@@ -285,21 +284,12 @@ contract ClipperTest3 is DSTest {
         failed = false;
     }
 
-    function try_bark(bytes32 ilk_, address urn_) internal returns (bool ok) {
-        string memory sig = "bark(bytes32,address,address)";
-        (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk_, urn_, address(this)));
+    function try_bark(bytes32 ilk_, address urn_, uint256 timestamp) internal returns (bool ok) {
+        string memory sig = "bark_with_timestamp(bytes32,address,address,uint256)";
+        (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk_, urn_, address(this), timestamp));
     }
 
-    function test_stopped_kick() public {
-        uint256 pos;
-        uint256 tab;
-        uint256 lot;
-        address usr;
-        uint96  tic;
-        uint256 top;
-        uint256 ink;
-        uint256 art;
-
+    function test_stopped_kick(uint256 timestamp) public {
         assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
@@ -315,20 +305,20 @@ contract ClipperTest3 is DSTest {
 
         // Any level of stoppage prevents kicking.
         clip.file("stopped", 1);
-        assertTrue(!try_bark(ilk, me));
+        assertTrue(!try_bark(ilk, me, timestamp));
 
         clip.file("stopped", 2);
-        assertTrue(!try_bark(ilk, me));
+        assertTrue(!try_bark(ilk, me, timestamp));
 
         clip.file("stopped", 3);
-        assertTrue(!try_bark(ilk, me));
+        assertTrue(!try_bark(ilk, me, timestamp));
 
         clip.file("stopped", 0);
-        assertTrue(try_bark(ilk, me));
+        assertTrue(try_bark(ilk, me, timestamp));
     }
 
     // At a stopped == 1 we are ok to take
-    function test_stopped_1_take() public takeSetup {
+    function test_stopped_1_take(uint256 timestamp) public takeSetup(timestamp) {
         clip.file("stopped", 1);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -341,7 +331,7 @@ contract ClipperTest3 is DSTest {
         });
     }
 
-    function test_stopped_2_take() public takeSetup {
+    function test_stopped_2_take(uint256 timestamp) public takeSetup(timestamp) {
         clip.file("stopped", 2);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -354,7 +344,7 @@ contract ClipperTest3 is DSTest {
         });
     }
 
-    function testSelfFail_stopped_3_take() public takeSetup {
+    function testSelfFail_stopped_3_take(uint256 timestamp) public takeSetup(timestamp) {
         clip.file("stopped", 3);
         // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
         // Readjusts slice to be tab/top = 25
@@ -368,7 +358,7 @@ contract ClipperTest3 is DSTest {
         fail();
     }
 
-    function test_incentive_max_values() public {
+    function test_incentive_max_values(uint256 timestamp) public {
         clip.file("chip", 2 ** 64 - 1);
         clip.file("tip", 2 ** 192 - 1);
 
@@ -382,7 +372,7 @@ contract ClipperTest3 is DSTest {
         assertEq(uint256(clip.tip()), 0);
     }
 
-    function testSelfFail_not_enough_dai() public takeSetup {
+    function testSelfFail_not_enough_dai(uint256 timestamp) public takeSetup(timestamp) {
         IGuy(che).take({
             id:  1,
             amt: 25 ether,
@@ -393,7 +383,7 @@ contract ClipperTest3 is DSTest {
         fail();
     }
 
-    function test_flashsale() public takeSetup {
+    function test_flashsale(uint256 timestamp) public takeSetup(timestamp) {
         assertEq(vat.dai(che), 0);
         assertEq(dai.balanceOf(che), 0);
         IGuy(che).take({

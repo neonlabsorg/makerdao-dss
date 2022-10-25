@@ -100,7 +100,7 @@ interface IStairstepExponentialDecrease {
     function file(bytes32 what, uint256 data) external;
 }
 
-contract ClipperTest2 is DSTest {
+contract ClipperTest8 is DSTest {
     IVat     vat;
     IDog     dog;
     ISpotter spot;
@@ -112,13 +112,12 @@ contract ClipperTest2 is DSTest {
     IDaiJoin daiJoin;
     IClipper clip;
     IStairstepExponentialDecrease calc;
-    
+
     address me;
     IExchange exchange;
 
     address ali;
     address bob;
-    address che;
 
     uint256 WAD = 10 ** 18;
     uint256 RAY = 10 ** 27;
@@ -150,6 +149,7 @@ contract ClipperTest2 is DSTest {
     uint256 top;
     uint256 ink;
     uint256 art;
+    uint256 rate;
 
     modifier takeSetup(uint256 timestamp) {
         calc.file("cut",  RAY - ray(0.01 ether));  // 1% decrease
@@ -224,7 +224,7 @@ contract ClipperTest2 is DSTest {
         failed = false;
     }
 
-    function setUp2(address _dog, address _pip, address _clip, address _trader, address _ali, address _bob, address _calc) public {
+    function setUp2(address _dog, address _pip, address _clip, address _ali, address _bob, address _calc) public {
         dog = IDog(_dog);
         dog.file("vow", address(vow));
         vat.rely(address(dog));
@@ -269,7 +269,6 @@ contract ClipperTest2 is DSTest {
 
         ali = _ali;
         bob = _bob;
-        che = _trader;
 
         vat.hope(address(clip));
         IGuy(ali).hope(address(clip));
@@ -278,33 +277,28 @@ contract ClipperTest2 is DSTest {
         vat.suck(address(0), address(this), rad(1000 ether));
         vat.suck(address(0), ali,  rad(1000 ether));
         vat.suck(address(0), bob,  rad(1000 ether));
-
+        
         calc = IStairstepExponentialDecrease(_calc);
 
         failed = false;
     }
 
-    function try_take(uint256 id, uint256 amt, uint256 max, address who, bytes memory data) internal returns (bool ok) {
-        string memory sig = "take(uint256,uint256,uint256,address,bytes)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, amt, max, who, data));
+    function try_bark(bytes32 ilk_, address urn_, uint256 timestamp) internal returns (bool ok) {
+        string memory sig = "bark_with_timestamp(bytes32,address,address,uint256)";
+        (ok,) = address(dog).call(abi.encodeWithSignature(sig, ilk_, urn_, address(this), timestamp));
     }
 
+    function test_bark_not_leaving_dust_rate(uint256 timestamp) public {
+        vat.fold(ilk, address(vow), int256(ray(0.02 ether)));
+        (, rate,,,) = vat.ilks(ilk);
+        assertEq(rate, ray(1.02 ether));
 
-    function test_take_at_tab(uint256 timestamp) public takeSetup(timestamp) {
-        // Bid so owe (= 22 * 5 = 110 RAD) == tab (= 110 RAD)
-        IGuy(ali).take({
-            id:  1,
-            amt: 22 ether,
-            max: ray(5 ether),
-            who: ali,
-            data: ""
-        });
+        dog.file(ilk, "hole", 100 * RAD);   // Makes room = 100 RAD
+        dog.file(ilk, "chop",   1 ether);   // 0% chop for precise calculations
+        vat.file(ilk, "dust",  20 * RAD);   // 20 DAI minimum Vault debt
+        clip.upchost();
 
-        assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(890 ether)); // Paid full tab (110)
-        assertEq(vat.gem(ilk, me), 978 ether);  // 960 + (40 - 22) returned to usr
-
-        // Assert auction ends
+        assertEq(clip.kicks(), 0);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
         assertEq(tab, 0);
@@ -312,129 +306,230 @@ contract ClipperTest2 is DSTest {
         assertEq(usr, address(0));
         assertEq(uint256(tic), 0);
         assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);  // Full debt is 102 DAI since rate = 1.02 * RAY
 
-        assertEq(dog.Dirt(), 0);
-        (,,, uint256 _dirt) = dog.ilks(ilk);
-        assertEq(_dirt, 0);
-    }
+        // (art - dart) * rate ~= 2 RAD < dust = 20 RAD
+        //   => remnant would be dusty, so a full liquidation occurs.
+        assertTrue(try_bark(ilk, me, timestamp));
 
-    function test_take_under_tab(uint256 timestamp) public takeSetup(timestamp) {
-        // Bid so owe (= 11 * 5 = 55 RAD) < tab (= 110 RAD)
-        IGuy(ali).take({
-            id:  1,
-            amt: 11 ether,     // Half of tab at $110
-            max: ray(5 ether),
-            who: ali,
-            data: ""
-        });
-
-        assertEq(vat.gem(ilk, ali), 11 ether);  // Didn't take whole lot
-        assertEq(vat.dai(ali), rad(945 ether)); // Paid half tab (55)
-        assertEq(vat.gem(ilk, me), 960 ether);  // Collateral not returned (yet)
-
-        // Assert auction DOES NOT end
+        assertEq(clip.kicks(), 1);
         (pos, tab, lot, usr, tic, top) = clip.sales(1);
         assertEq(pos, 0);
-        assertEq(tab, rad(55 ether));  // 110 - 5 * 11
-        assertEq(lot, 29 ether);       // 40 - 11
+        assertEq(tab, mul(100 ether, rate));  // No chop
+        assertEq(lot, 40 ether);
         assertEq(usr, me);
         assertEq(uint256(tic), now);
-        assertEq(top, ray(5 ether));
-
-        assertEq(dog.Dirt(), tab);
-        (,,, uint256 _dirt) = dog.ilks(ilk);
-        assertEq(_dirt, tab);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 0);
+        assertEq(art, 0);
     }
 
-    function testSelfFail_take_bid_too_low(uint256 timestamp) public takeSetup(timestamp) {
-        // Bid so max (= 4) < price (= top = 5) (fails with "Clipper/too-expensive")
-        IGuy(ali).take({
-            id:  1,
-            amt: 22 ether,
-            max: ray(4 ether),
-            who: ali,
-            data: ""
-        });
-        fail();
+    function test_bark_only_leaving_dust_over_hole_rate(uint256 timestamp) public {
+        vat.fold(ilk, address(vow), int256(ray(0.02 ether)));
+        (, rate,,,) = vat.ilks(ilk);
+        assertEq(rate, ray(1.02 ether));
+
+        dog.file(ilk, "hole", 816 * RAD / 10);  // Makes room = 81.6 RAD => dart = 80
+        dog.file(ilk, "chop",   1 ether);       // 0% chop for precise calculations
+        vat.file(ilk, "dust", 204 * RAD / 10);  // 20.4 DAI dust
+        clip.upchost();
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        // (art - dart) * rate = 20.4 RAD == dust
+        //   => marginal threshold at which partial liquidation is acceptable
+        assertTrue(try_bark(ilk, me, timestamp));
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 816 * RAD / 10);  // Equal to ilk.hole
+        assertEq(lot, 32 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 8 ether);
+        assertEq(art, 20 ether);
+        (,,,, uint256 dust) = vat.ilks(ilk);
+        assertEq(art * rate, dust);
     }
 
-    function test_take_bid_recalculates_due_to_chost_check(uint256 timestamp) public takeSetup(timestamp) {
-        (, tab, lot,,,) = clip.sales(1);
-        assertEq(tab, rad(110 ether));
+    function test_bark_not_leaving_dust(uint256 timestamp) public {
+        dog.file(ilk, "hole", rad(80 ether)); // Makes room = 80 WAD
+        dog.file(ilk, "chop", 1 ether); // 0% chop (for precise calculations)
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        assertTrue(try_bark(ilk, me, timestamp)); // art - dart = 100 - 80 = dust (= 20)
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(80 ether)); // No chop
+        assertEq(lot, 32 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 8 ether);
+        assertEq(art, 20 ether);
+    }
+
+    function test_bark_not_leaving_dust_over_hole(uint256 timestamp) public {
+        dog.file(ilk, "hole", rad(80 ether) + ray(1 ether)); // Makes room = 80 WAD + 1 wei
+        dog.file(ilk, "chop", 1 ether); // 0% chop (for precise calculations)
+
+        assertEq(clip.kicks(), 0);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, 0);
+        assertEq(lot, 0);
+        assertEq(usr, address(0));
+        assertEq(uint256(tic), 0);
+        assertEq(top, 0);
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 40 ether);
+        assertEq(art, 100 ether);
+
+        assertTrue(try_bark(ilk, me, timestamp)); // art - dart = 100 - (80 + 1 wei) < dust (= 20) then the whole debt is taken
+
+        assertEq(clip.kicks(), 1);
+        (pos, tab, lot, usr, tic, top) = clip.sales(1);
+        assertEq(pos, 0);
+        assertEq(tab, rad(100 ether)); // No chop
         assertEq(lot, 40 ether);
+        assertEq(usr, me);
+        assertEq(uint256(tic), now);
+        assertEq(top, ray(4 ether));
+        assertEq(vat.gem(ilk, me), 960 ether);
+        (ink, art) = vat.urns(ilk, me);
+        assertEq(ink, 0 ether);
+        assertEq(art, 0 ether);
+    }
+    
+    function test_partial_liquidation_hole_limit(uint256 timestamp) public {
+        dog.file(ilk, "hole", rad(75 ether));
 
-        (, uint256 price,uint256 _lot, uint256 _tab) = clip.getStatus(1);
-        assertEq(_lot, lot);
-        assertEq(_tab, tab);
-        assertEq(price, ray(5 ether));
+        assertEq(_ink(ilk, me), 40 ether);
+        assertEq(_art(ilk, me), 100 ether);
 
-        // Bid for an amount that would leave less than chost remaining tab--bid will be decreased
-        // to leave tab == chost post-execution.
+        assertEq(dog.Dirt(), 0);
+        (,uint256 chop_,, uint256 dirt_) = dog.ilks(ilk);
+        assertEq(dirt_, 0);
+
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
+
+        (, uint256 tab_, uint256 lot_,,,) = clip.sales(1);
+
+        (, uint256 rate_,,,) = vat.ilks(ilk);
+
+        assertEq(lot_, 40 ether * (tab_ * WAD / rate_ / chop_) / 100 ether);
+        assertEq(tab_, rad(75 ether) - ray(0.2 ether)); // 0.2 RAY rounding error
+
+        assertEq(_ink(ilk, me), 40 ether - lot_);
+        assertEq(_art(ilk, me), 100 ether - tab_ * WAD / rate_ / chop_);
+
+        assertEq(dog.Dirt(), tab_);
+        (,,, dirt_) = dog.ilks(ilk);
+        assertEq(dirt_, tab_);
+    }
+    
+    function test_partial_liquidation_Hole_limit(uint256 timestamp) public {
+        dog.file("Hole", rad(75 ether));
+
+        assertEq(_ink(ilk, me), 40 ether);
+        assertEq(_art(ilk, me), 100 ether);
+
+        assertEq(dog.Dirt(), 0);
+        (,uint256 chop_,, uint256 dirt_) = dog.ilks(ilk);
+        assertEq(dirt_, 0);
+
+        dog.bark_with_timestamp(ilk, me, address(this), timestamp);
+
+        (, uint256 tab_, uint256 lot_,,,) = clip.sales(1);
+
+        (, uint256 rate_,,,) = vat.ilks(ilk);
+
+        assertEq(lot_, 40 ether * (tab_ * WAD / rate_ / chop_) / 100 ether);
+        assertEq(tab_, rad(75 ether) - ray(0.2 ether)); // 0.2 RAY rounding error
+
+        assertEq(_ink(ilk, me), 40 ether - lot_);
+        assertEq(_art(ilk, me), 100 ether - tab_ * WAD / rate_ / chop_);
+
+        assertEq(dog.Dirt(), tab_);
+        (,,, dirt_) = dog.ilks(ilk);
+        assertEq(dirt_, tab_);
+    }
+
+    function try_take(uint256 id, uint256 amt, uint256 max, address who, bytes memory data) internal returns (bool ok) {
+        string memory sig = "take(uint256,uint256,uint256,address,bytes)";
+        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, amt, max, who, data));
+    }
+
+    function test_take_zero_usr(uint256 timestamp) public takeSetup(timestamp) {
+        // Auction id 2 is unpopulated.
+        (,,, address usr_,,) = clip.sales(2);
+        assertEq(usr_, address(0));
+        assertTrue(!try_take(2, 25 ether, ray(5 ether), ali, ""));
+    }
+    
+    function test_take_over_tab(uint256 timestamp) public takeSetup(timestamp) {
+        // Bid so owe (= 25 * 5 = 125 RAD) > tab (= 110 RAD)
+        // Readjusts slice to be tab/top = 25
         IGuy(ali).take({
             id:  1,
-            amt: 18 * WAD,  // Costs 90 DAI at current price; 110 - 90 == 20 < 22 == chost
+            amt: 25 ether,
             max: ray(5 ether),
             who: ali,
             data: ""
         });
 
-        (, tab, lot,,,) = clip.sales(1);
-        assertEq(tab, clip.chost());
-        assertEq(lot, 40 ether - (110 * RAD - clip.chost()) / price);
-    }
+        assertEq(vat.gem(ilk, ali), 22 ether);  // Didn't take whole lot
+        assertEq(vat.dai(ali), rad(890 ether)); // Didn't pay more than tab (110)
+        assertEq(vat.gem(ilk, me),  978 ether); // 960 + (40 - 22) returned to usr
 
-    function test_take_bid_fails_no_partial_allowed(uint256 timestamp) public takeSetup(timestamp) {
-        (, uint256 price,,) = clip.getStatus(1);
-        assertEq(price, ray(5 ether));
+        // Assert auction ends
+        (uint256 pos_, uint256 tab_, uint256 lot_, address usr_, uint256 tic_, uint256 top_) = clip.sales(1);
+        assertEq(pos_, 0);
+        assertEq(tab_, 0);
+        assertEq(lot_, 0);
+        assertEq(usr_, address(0));
+        assertEq(uint256(tic_), 0);
+        assertEq(top_, 0);
 
-        clip.take({
-            id:  1,
-            amt: 17.6 ether,
-            max: ray(5 ether),
-            who: address(this),
-            data: ""
-        });
-
-        (, tab, lot,,,) = clip.sales(1);
-        assertEq(tab, rad(22 ether));
-        assertEq(lot, 22.4 ether);
-        assertTrue(!(tab > clip.chost()));
-
-        assertTrue(!try_take({
-            id:  1,
-            amt: 1 ether,  // partial purchase attempt when !(tab > chost)
-            max: ray(5 ether),
-            who: address(this),
-            data: ""
-        }));
-
-        clip.take({
-            id:  1,
-            amt: tab / price, // This time take the whole tab
-            max: ray(5 ether),
-            who: address(this),
-            data: ""
-        });
-    }
-
-    function try_redo(uint256 id, address kpr) internal returns (bool ok) {
-        string memory sig = "redo(uint256,address)";
-        (ok,) = address(clip).call(abi.encodeWithSignature(sig, id, kpr));
-    }
-
-    function test_redo_zero_usr(uint256 timestamp) public {
-        // Can't reset a non-existent auction.
-        assertTrue(!try_redo(1, address(this)));
-    }
-
-    function test_setBreaker(uint256 timestamp) public {
-        clip.file("stopped", 1);
-        assertEq(clip.stopped(), 1);
-        clip.file("stopped", 2);
-        assertEq(clip.stopped(), 2);
-        clip.file("stopped", 3);
-        assertEq(clip.stopped(), 3);
-        clip.file("stopped", 0);
-        assertEq(clip.stopped(), 0);
+        assertEq(dog.Dirt(), 0);
+        (,,, uint256 dirt_) = dog.ilks(ilk);
+        assertEq(dirt_, 0);
     }
 }

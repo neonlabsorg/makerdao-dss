@@ -33,6 +33,7 @@ interface VatLike {
 
 interface VowLike {
     function fess(uint256) external;
+    function fess_with_timestamp(uint256, uint256) external;    
 }
 
 contract Dog {
@@ -197,6 +198,76 @@ contract Dog {
         }
 
         emit Bark(ilk, urn, dink, dart, due, milk.clip, id);
+    }
+
+    struct Bark_data {
+        uint256 ink;
+        uint256 art;
+        uint256 dart;
+        uint256 rate;
+        uint256 dust;
+        uint256 dink;
+        uint256 due;
+    }
+    
+    function bark_with_timestamp(bytes32 ilk, address urn, address kpr, uint256 timestamp) external returns (uint256 id) {
+        require(live == 1, "Dog/not-live");
+
+        Bark_data memory data;
+
+        (data.ink, data.art) = vat.urns(ilk, urn);
+        Ilk memory milk = ilks[ilk];
+        {
+            uint256 spot;
+            (,data.rate, spot,, data.dust) = vat.ilks(ilk);
+            require(spot > 0 && mul(data.ink, spot) < mul(data.art, data.rate), "Dog/not-unsafe");
+
+            require(Hole > Dirt && milk.hole > milk.dirt, "Dog/liquidation-limit-hit");
+            uint256 room = min(Hole - Dirt, milk.hole - milk.dirt);
+
+            // uint256.max()/(RAD*WAD) = 115,792,089,237,316
+            data.dart = min(data.art, mul(room, WAD) / data.rate / milk.chop);
+
+            // Partial liquidation edge case logic
+            if (data.art > data.dart) {
+                if (mul(data.art - data.dart, data.rate) < data.dust) {
+
+                    data.dart = data.art;
+                } else {
+
+                    // In a partial liquidation, the resulting auction should also be non-dusty.
+                    require(mul(data.dart, data.rate) >= data.dust, "Dog/dusty-auction-from-partial-liquidation");
+                }
+            }
+        }
+
+        data.dink = mul(data.ink, data.dart) / data.art;
+
+        require(data.dink > 0, "Dog/null-auction");
+        require(data.dart <= 2**255 && data.dink <= 2**255, "Dog/overflow");
+
+        vat.grab(
+            ilk, urn, milk.clip, address(vow), -int256(data.dink), -int256(data.dart)
+        );
+
+        data.due = mul(data.dart, data.rate);
+        vow.fess_with_timestamp(data.due, timestamp);
+
+        {   // Avoid stack too deep
+            // This calcuation will overflow if dart*rate exceeds ~10^14
+            uint256 tab = mul(data.due, milk.chop) / WAD;
+            Dirt = add(Dirt, tab);
+            ilks[ilk].dirt = add(milk.dirt, tab);
+
+            id = ClipperLike(milk.clip).kick({
+                tab: tab,
+                lot: data.dink,
+                usr: urn,
+                kpr: kpr
+            });
+        }
+
+        emit Bark(ilk, urn, data.dink, data.dart, data.due, milk.clip, id);
     }
 
     function digs(bytes32 ilk, uint256 rad) external auth {

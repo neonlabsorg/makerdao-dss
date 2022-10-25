@@ -52,26 +52,6 @@ contract DogTest1 is DSTest {
         failed = false;
     }
 
-    function test_file_chop() public {
-        dog.file(ilk, "chop", WAD);
-        dog.file(ilk, "chop", WAD * 113 / 100);
-    }
-
-    function testSelfFail_file_chop_lt_WAD() public {
-        dog.file(ilk, "chop", WAD - 1);
-        fail();
-    }
-
-    function testSelfFail_file_chop_eq_zero() public {
-        dog.file(ilk, "chop", 0);
-        fail();
-    }
-
-    function testSelfFail_file_clip_wrong_ilk() public {
-        dog.file("mismatched_ilk", "clip", address(clip));
-        fail();
-    }
-
     function setUrn(uint256 ink, uint256 art) internal {
         vat.slip(ilk, usr, int256(ink));
         (, uint256 rate,,,) = vat.ilks(ilk);
@@ -87,20 +67,6 @@ contract DogTest1 is DSTest {
         (, uint256 art) = vat.urns(ilk, usr);
         uint256 due = art * rate;
         dusty = due > 0 && due < dust;
-    }
-
-    function test_bark_basic() public {
-        setUrn(WAD, 2 * THOUSAND * WAD);
-        dog.bark(ilk, usr, address(this));
-        (uint256 ink, uint256 art) = vat.urns(ilk, usr);
-        assertEq(ink, 0);
-        assertEq(art, 0);
-    }
-
-    function testSelfFail_bark_not_unsafe() public {
-        setUrn(WAD, 500 * WAD);
-        dog.bark(ilk, usr, address(this));
-        fail();
     }
 
     // dog.bark will liquidate vaults even if they are dusty
