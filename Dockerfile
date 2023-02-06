@@ -60,6 +60,10 @@ RUN pip install web3
 
 RUN mkdir -p /home/maker/dss
 WORKDIR /home/maker/dss
+
+RUN touch .bash_profile \
+ && sudo curl https://dapp.tools/install | sh
+
 ADD . /home/maker/dss
 
 RUN sudo chmod -R 777 /home/maker
