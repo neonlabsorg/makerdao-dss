@@ -1,8 +1,8 @@
 DAPP_BUILD_EXTRACT=1 dapp build
 
-rm -rf abi/
+#rm -rf abi/
 mkdir abi/
-mv out/*.abi abi/
+#mv out/*.abi abi/
 
 DAPP_BUILD_OPTIMIZE=1 DAPP_BUILD_OPTIMIZE_RUNS=1 dapp build
 
