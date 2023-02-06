@@ -7,12 +7,11 @@ mv out/*.abi abi/
 DAPP_BUILD_OPTIMIZE=1 DAPP_BUILD_OPTIMIZE_RUNS=1 dapp build
 
 export DAPP_SOLC_VERSION=0.6.12
-export ETH_FROM=0xa3a0E8Fbe0Ad412D808693EDc2751f0776e13AF1
+export ETH_FROM=${NEON_ACCOUNTS}
 export ETH_PASSWORD=eth_pass
 export ETH_KEYSTORE=keystore
-export ETH_RPC_URL=https://devnet.neonevm.org/solana
+export ETH_RPC_URL=${NEON_PROXY_URL}
 
-# export ETH_RPC_URL=http://localhost:9090/solana
 # curl -i -X POST     -d '{"wallet": "0xa3a0E8Fbe0Ad412D808693EDc2751f0776e13AF1", "amount": 50000}'     'http://localhost:3333/request_neon'
 # curl -i -X POST     -d '{"wallet": "0xa3a0E8Fbe0Ad412D808693EDc2751f0776e13AF1", "amount": 50000}'     'http://localhost:3333/request_neon'
 

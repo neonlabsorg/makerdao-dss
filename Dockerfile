@@ -50,13 +50,22 @@ USER maker
 ENV USER maker
 WORKDIR /home/maker
 
+
 RUN touch .bash_profile \
  && sudo curl https://dapp.tools/install | sh
+
+RUN nix-env -f https://github.com/dapphub/dapptools/archive/master.tar.gz -iA solc-static-versions.solc_0_6_12
+RUN sudo apk add --no-cache python3 py3-pip
+RUN pip install web3
 
 RUN mkdir -p /home/maker/dss
 WORKDIR /home/maker/dss
 ADD . /home/maker/dss
 
 RUN sudo chmod -R 777 /home/maker
+ARG NEON_PROXY_URL
+ARG NEON_ACCOUNTS
 
-CMD ["/bin/bash", "-l", "./start.sh"]
+ENV NEON_PROXY_URL=${NEON_PROXY_URL}
+ENV NEON_ACCOUNTS=${NEON_ACCOUNTS}
+ENTRYPOINT ["/bin/bash", "-l", "./start.sh"]
