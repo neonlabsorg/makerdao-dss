@@ -14,6 +14,19 @@ export DAPP_SOLC_VERSION=0.6.12
 export ETH_PASSWORD=eth_pass
 export ETH_KEYSTORE=keystore
 
+if [ ! -d "$ETH_KEYSTORE" ]; then
+  mkdir $ETH_KEYSTORE
+fi
+
+python3 -c "import eth_keyfile;
+import json;
+import os;
+neon_acc = bytes.fromhex(os.environ.get('NEON_ACCOUNTS')[2:]);
+password = 'tMDao22@IF!Dom';
+keydata = eth_keyfile.create_keyfile_json(neon_acc, password.encode());
+with open('keystore/keyfile', 'w') as f:
+    json.dump(keydata, f);
+"
 
 DAPP_BUILD_EXTRACT=1 dapp build
 DAPP_BUILD_OPTIMIZE=1 DAPP_BUILD_OPTIMIZE_RUNS=1 dapp build
@@ -88,8 +101,10 @@ testcase_with_timestamp() {
 run_tests() {
   status=124
   while (($status==124)); do
-    test_contract=$(timeout 60s dapp create $contractName)
+    test_contract=$(timeout 90s dapp create $contractName)
     status=$?
+    echo "test_contract: $test_contract"
+    echo "status: $status"
   done
   echo $contractName address: $test_contract
   for method in $(cat abi/$contractName.abi | python3 -mjson.tool | grep \"name\" | grep \"test | sed 's/"name": "//g' | sed 's/",//g'); do
