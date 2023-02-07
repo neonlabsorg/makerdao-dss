@@ -1,20 +1,22 @@
-DAPP_BUILD_EXTRACT=1 dapp build
+
 
 #rm -rf abi/
 #mkdir abi/
 #mv out/*.abi abi/
 
-DAPP_BUILD_OPTIMIZE=1 DAPP_BUILD_OPTIMIZE_RUNS=1 dapp build
+export NEON_ACCOUNT_PUB_KEY=$(python3 -c "import eth_account; import os; print(eth_account.Account().from_key(os.environ.get('NEON_ACCOUNTS')).address)")
+echo "NEON_ACCOUNT_PUB_KEY: $NEON_ACCOUNT_PUB_KEY"
+export ETH_FROM=${NEON_ACCOUNT_PUB_KEY}
+export ETH_RPC_URL=${NEON_PROXY_URL}
+echo "ETH_RPC_URL: $ETH_RPC_URL"
 
 export DAPP_SOLC_VERSION=0.6.12
 export ETH_PASSWORD=eth_pass
 export ETH_KEYSTORE=keystore
-export ETH_RPC_URL=${NEON_PROXY_URL}
 
 
-
-export ETH_FROM=$(python3 -c "import eth_account; import os; print(eth_account.Account().from_key(os.environ.get('NEON_ACCOUNTS')).address)")
-echo $ETH_FROM
+DAPP_BUILD_EXTRACT=1 dapp build
+DAPP_BUILD_OPTIMIZE=1 DAPP_BUILD_OPTIMIZE_RUNS=1 dapp build
 
 # curl -i -X POST     -d '{"wallet": "0xa3a0E8Fbe0Ad412D808693EDc2751f0776e13AF1", "amount": 50000}'     'http://localhost:3333/request_neon'
 # curl -i -X POST     -d '{"wallet": "0xa3a0E8Fbe0Ad412D808693EDc2751f0776e13AF1", "amount": 50000}'     'http://localhost:3333/request_neon'

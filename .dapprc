@@ -1,5 +1,5 @@
 export DAPP_SOLC_VERSION=0.6.12
-export ETH_FROM=${NEON_ACCOUNTS}
+export ETH_FROM=${NEON_ACCOUNT_PUB_KEY}
 export ETH_PASSWORD=eth_pass
 export ETH_KEYSTORE=keystore
 export ETH_RPC_URL=${NEON_PROXY_URL}
